@@ -26,6 +26,22 @@ export const TaskList: React.FC = () => {
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [breakingDownId, setBreakingDownId] = useState<string | null>(null);
   const [taskFilter, setTaskFilter] = useState<'all' | 'open' | 'done'>('open');
+  const [celebratingTaskId, setCelebratingTaskId] = useState<string | null>(null);
+
+  const handleToggleTask = (task: Task) => {
+    const isCompleted = task.status === 'completed';
+
+    if (isCompleted) {
+      updateTask(task.id, { status: 'in-progress' });
+      return;
+    }
+
+    setCelebratingTaskId(task.id);
+    updateTask(task.id, { status: 'completed' });
+    window.setTimeout(() => {
+      setCelebratingTaskId(current => current === task.id ? null : current);
+    }, 900);
+  };
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +79,7 @@ export const TaskList: React.FC = () => {
   const completedTasks = tasks.filter(t => t.status === 'completed');
   const priorityRank: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
   const visibleTasks = [...tasks]
-    .filter(task => taskFilter === 'all' || (taskFilter === 'open' ? task.status !== 'completed' : task.status === 'completed'))
+    .filter(task => task.id === celebratingTaskId || taskFilter === 'all' || (taskFilter === 'open' ? task.status !== 'completed' : task.status === 'completed'))
     .sort((a, b) => {
       if (taskFilter === 'done') return b.createdAt.localeCompare(a.createdAt);
       const priorityDifference = priorityRank[a.priority] - priorityRank[b.priority];
@@ -217,7 +233,7 @@ export const TaskList: React.FC = () => {
           return (
             <div
               key={task.id}
-              className="glass-panel"
+              className={`glass-panel task-card ${celebratingTaskId === task.id ? 'task-card-completing' : ''}`}
               style={{
                 padding: '12px',
                 opacity: isCompleted ? 0.6 : 1,
@@ -229,7 +245,7 @@ export const TaskList: React.FC = () => {
                   <button
                     type="button"
                     className="task-complete-control"
-                    onClick={() => updateTask(task.id, { status: isCompleted ? 'in-progress' : 'completed' })}
+                    onClick={() => handleToggleTask(task)}
                     aria-label={isCompleted ? `Reopen task: ${task.title}` : `Complete task: ${task.title}`}
                     aria-pressed={isCompleted}
                   >
@@ -299,6 +315,13 @@ export const TaskList: React.FC = () => {
                   </button>
                 </div>
               </div>
+
+              {celebratingTaskId === task.id && (
+                <div className="task-yay" role="status" aria-live="polite">
+                  <span className="task-yay-mark">&#10003;</span>
+                  Yay — one less thing.
+                </div>
+              )}
 
               {/* Sub-steps Expansion Drawer */}
               {isExpanded && (
