@@ -20,7 +20,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
   onFinishQuiz,
   onCancel
 }) => {
-  const { customApiKey, recordQuizResult } = useSharedContext();
+  const { customApiKey, aiMode, recordQuizResult } = useSharedContext();
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -41,7 +41,8 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
             questionCount: 3,
             difficulty: 'medium'
           },
-          customApiKey
+          customApiKey,
+          aiMode
         );
         if (isMounted) {
           setQuestions(fetched);
@@ -57,7 +58,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [subject, topic, customApiKey]);
+  }, [subject, topic, customApiKey, aiMode]);
 
   // Timer Countdown
   useEffect(() => {
@@ -97,7 +98,8 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           questions,
           userAnswers: selectedAnswers
         },
-        customApiKey
+        customApiKey,
+        aiMode
       );
 
       // Trigger celebratory confetti if score is high
@@ -125,7 +127,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
   if (loading) {
     return (
       <div className="glass-panel animate-fade-in" style={{ padding: '30px', textAlign: 'center' }}>
-        <Loader2 className="animate-spin" size={32} color="#00f0ff" style={{ margin: '0 auto 12px' }} />
+        <Loader2 className="animate-spin" size={32} color="#d08a67" style={{ margin: '0 auto 12px' }} />
         <div style={{ fontWeight: 700, fontSize: '15px' }}>AI Generating Adaptive Quiz...</div>
         <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
           Crafting diagnostic questions for "{topic}"
@@ -161,7 +163,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           <span className="badge badge-cyan">{currentQ.topicTag}</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#fbbf24', fontWeight: 700 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#e3b56d', fontWeight: 700 }}>
           <Clock size={13} />
           <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
         </div>
@@ -169,7 +171,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
 
       {/* Question Text */}
       <div style={{ marginTop: '10px', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.4, color: '#fff' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.4, color: 'var(--text)' }}>
           {currentQ.question}
         </h3>
       </div>
@@ -187,9 +189,9 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
                 alignItems: 'center',
                 gap: '12px',
                 padding: '12px 14px',
-                borderRadius: '12px',
-                background: isSelected ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                border: `1px solid ${isSelected ? '#00f0ff' : 'var(--border-subtle)'}`,
+                borderRadius: '3px',
+                background: isSelected ? 'rgba(208, 138, 103, 0.15)' : 'var(--surface-raised)',
+                border: `1px solid ${isSelected ? '#d08a67' : 'var(--border-subtle)'}`,
                 color: isSelected ? '#fff' : 'var(--text-muted)',
                 textAlign: 'left',
                 transition: 'all 0.2s ease',
@@ -204,7 +206,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: isSelected ? '#00f0ff' : 'rgba(255, 255, 255, 0.08)',
+                  background: isSelected ? '#d08a67' : 'var(--surface-raised)',
                   color: isSelected ? '#04060a' : 'var(--text-muted)',
                   fontWeight: 700,
                   fontSize: '11px',

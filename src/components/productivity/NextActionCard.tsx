@@ -16,7 +16,7 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ onExecuteAction 
   const fetchRecommendation = async () => {
     setLoading(true);
     try {
-      const rec = await recommendNextAction(state, state.customApiKey);
+      const rec = await recommendNextAction(state, state.customApiKey, state.aiMode);
       setRecommendation(rec);
     } catch (err) {
       console.error('Failed to get recommendation:', err);
@@ -27,7 +27,7 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ onExecuteAction 
 
   useEffect(() => {
     fetchRecommendation();
-  }, [state.tasks.length, state.quizHistory.length, state.studyPlans.length]);
+  }, [state.tasks.length, state.quizHistory.length, state.studyPlans.length, state.aiMode]);
 
   if (loading) {
     return (
@@ -35,14 +35,14 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ onExecuteAction 
         className="glass-panel"
         style={{
           padding: '16px',
-          background: 'linear-gradient(135deg, rgba(255, 184, 0, 0.08) 0%, rgba(244, 63, 94, 0.08) 100%)',
-          borderColor: 'rgba(255, 184, 0, 0.3)',
+          background: 'linear-gradient(135deg, rgba(227, 181, 109, 0.08) 0%, rgba(210, 117, 104, 0.08) 100%)',
+          borderColor: 'rgba(227, 181, 109, 0.3)',
           display: 'flex',
           alignItems: 'center',
           gap: '12px'
         }}
       >
-        <Loader2 className="animate-spin" size={20} color="#fbbf24" />
+        <Loader2 className="animate-spin" size={20} color="#e3b56d" />
         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           AI synthesizing context to recommend next action...
         </div>
@@ -60,17 +60,17 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ onExecuteAction 
       style={{
         padding: '16px',
         background: isHighUrgency
-          ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(255, 184, 0, 0.1) 100%)'
-          : 'linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
-        borderColor: isHighUrgency ? 'rgba(244, 63, 94, 0.4)' : 'rgba(0, 240, 255, 0.3)',
+          ? 'linear-gradient(135deg, rgba(210, 117, 104, 0.12) 0%, rgba(227, 181, 109, 0.1) 100%)'
+          : 'linear-gradient(135deg, rgba(208, 138, 103, 0.1) 0%, rgba(156, 132, 128, 0.1) 100%)',
+        borderColor: isHighUrgency ? 'rgba(210, 117, 104, 0.4)' : 'rgba(208, 138, 103, 0.3)',
         position: 'relative',
         overflow: 'hidden'
       }}
     >
       <div className="card-header-row" style={{ marginBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Flame size={16} color={isHighUrgency ? '#fb7185' : '#00f0ff'} />
-          <span style={{ fontSize: '11px', fontWeight: 800, color: isHighUrgency ? '#fb7185' : '#00f0ff', letterSpacing: '0.6px' }}>
+          <Flame size={16} color={isHighUrgency ? '#e39485' : '#d08a67'} />
+          <span style={{ fontSize: '11px', fontWeight: 800, color: isHighUrgency ? '#e39485' : '#d08a67', letterSpacing: '0.6px' }}>
             RECOMMENDED NEXT ACTION
           </span>
         </div>
@@ -85,7 +85,7 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ onExecuteAction 
         </button>
       </div>
 
-      <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+      <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
         {recommendation.headline}
       </div>
 

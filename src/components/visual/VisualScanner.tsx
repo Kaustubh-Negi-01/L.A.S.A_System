@@ -10,7 +10,7 @@ interface VisualScannerProps {
 }
 
 export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) => {
-  const { customApiKey, addScanResult } = useSharedContext();
+  const { customApiKey, aiMode, addScanResult } = useSharedContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
         const presetObj = sampleImagePresets.find(p => p.id === activePreset);
         scanResult = generateMockVisualInsights(presetObj?.imagePromptText);
       } else if (selectedImage) {
-        scanResult = await extractVisualInsights(selectedImage, mimeType, customApiKey);
+        scanResult = await extractVisualInsights(selectedImage, mimeType, customApiKey, aiMode);
       } else {
         scanResult = generateMockVisualInsights();
       }
@@ -70,7 +70,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
     <div className="glass-panel animate-slide-up" style={{ padding: '18px' }}>
       <div className="card-header-row">
         <div className="card-title">
-          <Camera size={18} color="#00f0ff" />
+          <Camera size={18} color="#d08a67" />
           <span>Understand & Act (Multimodal Vision)</span>
         </div>
         <span className="badge badge-cyan">Visual Parser</span>
@@ -97,18 +97,18 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '9px 12px',
-                  borderRadius: '10px',
-                  background: isSelected ? 'rgba(0, 240, 255, 0.12)' : 'rgba(255, 255, 255, 0.03)',
-                  border: `1px solid ${isSelected ? '#00f0ff' : 'var(--border-subtle)'}`,
+                  borderRadius: '5px',
+                  background: isSelected ? 'rgba(208, 138, 103, 0.12)' : 'var(--surface-muted)',
+                  border: `1px solid ${isSelected ? '#d08a67' : 'var(--border-subtle)'}`,
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FileText size={15} color={isSelected ? '#00f0ff' : '#94a3b8'} />
+                  <FileText size={15} color={isSelected ? '#d08a67' : '#b9aaa0'} />
                   <div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? '#fff' : '#cbd5e1' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? '#fff' : '#d8ccc1' }}>
                       {preset.name}
                     </div>
                     <div style={{ fontSize: '10px', color: 'var(--text-dim)' }}>
@@ -116,7 +116,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
                     </div>
                   </div>
                 </div>
-                {isSelected && <CheckCircle size={14} color="#00f0ff" />}
+                {isSelected && <CheckCircle size={14} color="#d08a67" />}
               </button>
             );
           })}
@@ -128,9 +128,9 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
         onClick={() => fileInputRef.current?.click()}
         style={{
           padding: '20px',
-          borderRadius: '14px',
+          borderRadius: '6px',
           border: '2px dashed var(--border-glow)',
-          background: 'rgba(0, 240, 255, 0.03)',
+          background: 'rgba(208, 138, 103, 0.03)',
           textAlign: 'center',
           cursor: 'pointer',
           marginBottom: '14px',
@@ -150,16 +150,16 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
             <img
               src={selectedImage}
               alt="Uploaded Preview"
-              style={{ maxHeight: '140px', borderRadius: '8px', objectFit: 'contain', margin: '0 auto 8px' }}
+              style={{ maxHeight: '140px', borderRadius: '4px', objectFit: 'contain', margin: '0 auto 8px' }}
             />
-            <div style={{ fontSize: '11px', color: '#34d399', fontWeight: 600 }}>
+            <div style={{ fontSize: '11px', color: '#a6b27b', fontWeight: 600 }}>
               Image Loaded — Click Scan below
             </div>
           </div>
         ) : (
           <div>
-            <Upload size={24} color="#00f0ff" style={{ margin: '0 auto 8px' }} />
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>
+            <Upload size={24} color="#d08a67" style={{ margin: '0 auto 8px' }} />
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
               Upload Custom Image / Poster
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>

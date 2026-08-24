@@ -30,8 +30,8 @@ export const VisualHub: React.FC<VisualHubProps> = ({
         className="glass-panel"
         style={{
           padding: '12px 14px',
-          background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%)',
-          borderColor: 'rgba(0, 240, 255, 0.25)',
+          background: 'linear-gradient(135deg, rgba(208, 138, 103, 0.08) 0%, rgba(166, 178, 123, 0.08) 100%)',
+          borderColor: 'rgba(208, 138, 103, 0.25)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -48,7 +48,7 @@ export const VisualHub: React.FC<VisualHubProps> = ({
         <button
           className="btn-primary"
           onClick={() => setIsScanningMode(true)}
-          style={{ padding: '6px 10px', fontSize: '11px', borderRadius: '10px' }}
+          style={{ padding: '6px 10px', fontSize: '11px', borderRadius: '5px' }}
         >
           <Camera size={13} />
           <span>New Scan</span>
@@ -72,7 +72,7 @@ export const VisualHub: React.FC<VisualHubProps> = ({
         <div className="glass-panel" style={{ padding: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <History size={14} color="#00f0ff" />
+              <History size={14} color="#d08a67" />
               RECENT VISUAL SCANS
             </span>
           </div>
@@ -87,9 +87,9 @@ export const VisualHub: React.FC<VisualHubProps> = ({
                 }}
                 style={{
                   padding: '8px 12px',
-                  borderRadius: '10px',
-                  background: s.id === currentScan?.id ? 'rgba(0, 240, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-                  border: `1px solid ${s.id === currentScan?.id ? '#00f0ff' : 'var(--border-subtle)'}`,
+                  borderRadius: '5px',
+                  background: s.id === currentScan?.id ? 'rgba(208, 138, 103, 0.08)' : 'var(--surface-muted)',
+                  border: `1px solid ${s.id === currentScan?.id ? '#d08a67' : 'var(--border-subtle)'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -97,9 +97,9 @@ export const VisualHub: React.FC<VisualHubProps> = ({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FileText size={14} color="#00f0ff" />
+                  <FileText size={14} color="#d08a67" />
                   <div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#fff' }}>{s.title}</div>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)' }}>{s.title}</div>
                     <div style={{ fontSize: '10px', color: 'var(--text-dim)' }}>
                       {s.extractedDates[0] ? `Date: ${s.extractedDates[0]}` : 'No date detected'}
                     </div>

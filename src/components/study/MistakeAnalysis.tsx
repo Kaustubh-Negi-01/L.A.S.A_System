@@ -20,7 +20,7 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({
     <div className="glass-panel animate-slide-up" style={{ padding: '20px' }}>
       <div className="card-header-row">
         <div className="card-title">
-          <Award size={20} color={isHighScorer ? '#34d399' : '#fbbf24'} />
+          <Award size={20} color={isHighScorer ? '#a6b27b' : '#e3b56d'} />
           <span>Diagnostic Mistake Analysis</span>
         </div>
         <span className={`badge ${isHighScorer ? 'badge-green' : isMediumScorer ? 'badge-amber' : 'badge-red'}`}>
@@ -32,16 +32,16 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({
       <div
         style={{
           padding: '16px',
-          borderRadius: '16px',
+          borderRadius: '6px',
           background: isHighScorer
-            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 78, 59, 0.1) 100%)'
-            : 'linear-gradient(135deg, rgba(244, 63, 94, 0.15) 0%, rgba(136, 19, 55, 0.1) 100%)',
-          border: `1px solid ${isHighScorer ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
+            ? 'linear-gradient(135deg, rgba(166, 178, 123, 0.15) 0%, rgba(6, 78, 59, 0.1) 100%)'
+            : 'linear-gradient(135deg, rgba(210, 117, 104, 0.15) 0%, rgba(136, 19, 55, 0.1) 100%)',
+          border: `1px solid ${isHighScorer ? 'rgba(166, 178, 123, 0.3)' : 'rgba(210, 117, 104, 0.3)'}`,
           textAlign: 'center',
           marginBottom: '16px'
         }}
       >
-        <div style={{ fontSize: '28px', fontWeight: 800, fontFamily: 'var(--font-heading)', color: '#fff' }}>
+        <div style={{ fontSize: '28px', fontWeight: 800, fontFamily: 'var(--font-heading)', color: 'var(--text)' }}>
           {result.percentage}%
         </div>
         <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -55,19 +55,19 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({
         <div
           style={{
             padding: '12px',
-            background: 'rgba(16, 185, 129, 0.06)',
-            borderRadius: '12px',
-            border: '1px solid rgba(16, 185, 129, 0.2)'
+            background: 'rgba(166, 178, 123, 0.06)',
+            borderRadius: '3px',
+            border: '1px solid rgba(166, 178, 123, 0.2)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#34d399', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#a6b27b', marginBottom: '6px' }}>
             <CheckCircle size={13} />
             MASTERED TOPICS
           </div>
           {result.strengths.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {result.strengths.map((s, idx) => (
-                <span key={idx} style={{ fontSize: '11px', color: '#e2e8f0' }}>• {s}</span>
+                <span key={idx} style={{ fontSize: '11px', color: 'var(--text)' }}>• {s}</span>
               ))}
             </div>
           ) : (
@@ -79,12 +79,12 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({
         <div
           style={{
             padding: '12px',
-            background: 'rgba(244, 63, 94, 0.06)',
-            borderRadius: '12px',
-            border: '1px solid rgba(244, 63, 94, 0.2)'
+            background: 'rgba(210, 117, 104, 0.06)',
+            borderRadius: '3px',
+            border: '1px solid rgba(210, 117, 104, 0.2)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#fb7185', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#e39485', marginBottom: '6px' }}>
             <AlertTriangle size={13} />
             WEAK CONCEPTS
           </div>
@@ -105,8 +105,8 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({
         className="glass-panel"
         style={{
           padding: '14px',
-          background: 'rgba(139, 92, 246, 0.08)',
-          borderColor: 'rgba(139, 92, 246, 0.3)',
+          background: 'rgba(156, 132, 128, 0.08)',
+          borderColor: 'rgba(156, 132, 128, 0.3)',
           marginBottom: '16px'
         }}
       >
@@ -114,7 +114,7 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({
           <Sparkles size={14} />
           AI ADAPTIVE RECOMMENDATION
         </div>
-        <p style={{ fontSize: '12px', color: '#e2e8f0', lineHeight: 1.45 }}>
+        <p style={{ fontSize: '12px', color: 'var(--text)', lineHeight: 1.45 }}>
           {result.adaptiveFeedback}
         </p>
 
@@ -123,11 +123,11 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({
             style={{
               marginTop: '10px',
               padding: '8px 10px',
-              borderRadius: '8px',
-              background: 'rgba(0, 240, 255, 0.08)',
-              border: '1px dashed rgba(0, 240, 255, 0.3)',
+              borderRadius: '4px',
+              background: 'rgba(208, 138, 103, 0.08)',
+              border: '1px dashed rgba(208, 138, 103, 0.3)',
               fontSize: '11px',
-              color: '#00f0ff'
+              color: '#d08a67'
             }}
           >
             <strong>Added to Study Plan:</strong> {result.recommendedNextMilestone}
@@ -139,16 +139,16 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({
       <div
         style={{
           padding: '10px 12px',
-          borderRadius: '10px',
-          background: 'rgba(0, 240, 255, 0.05)',
-          border: '1px solid rgba(0, 240, 255, 0.15)',
+          borderRadius: '5px',
+          background: 'rgba(208, 138, 103, 0.05)',
+          border: '1px solid rgba(208, 138, 103, 0.15)',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
           marginBottom: '16px'
         }}
       >
-        <ShieldAlert size={16} color="#00f0ff" />
+        <ShieldAlert size={16} color="#d08a67" />
         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
           L.A.S.A. dynamically updated your study roadmap & created a remedial task in Productivity Coach!
         </span>

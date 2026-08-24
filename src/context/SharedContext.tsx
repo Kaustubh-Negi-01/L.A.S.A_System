@@ -105,7 +105,7 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     if (!targetTask) return;
 
     try {
-      const generatedSteps = await breakdownTask(targetTask.title, targetTask.description, state.customApiKey);
+      const generatedSteps = await breakdownTask(targetTask.title, targetTask.description, state.customApiKey, state.aiMode);
       setState(prev => ({
         ...prev,
         tasks: prev.tasks.map(t => (t.id === taskId ? { ...t, steps: generatedSteps } : t))
@@ -243,6 +243,13 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   // --- Cross-Mode Dispatcher (Understand & Act -> Calendar & Tasks & Study Plan) ---
   const dispatchScanToApp = (scan: VisualScanResult) => {
+    const alreadyDispatched = state.tasks.some(task => task.sourceReferenceId === scan.id)
+      || state.events.some(event => scan.extractedEvents.some(extracted => extracted.id === event.id));
+
+    if (alreadyDispatched) {
+      return { addedTasks: 0, addedEvents: 0, planCreated: false };
+    }
+
     let addedTasks = 0;
     let addedEvents = 0;
     let planCreated = false;
@@ -278,7 +285,12 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     let newPlan: StudyPlan | null = null;
     if (examEvent) {
       const subject = examEvent.title.replace(/exam|midterm|mid-term|test|assessment/gi, '').trim() || 'Core Subject';
-      newPlan = {
+      const hasExistingPlan = state.studyPlans.some(plan =>
+        plan.subject.trim().toLowerCase() === subject.trim().toLowerCase()
+      );
+
+      if (!hasExistingPlan) {
+        newPlan = {
         id: `plan-scan-${Date.now()}`,
         subject: subject,
         examDate: examEvent.date,
@@ -293,8 +305,9 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           { day: 2, topic: `${subject} Problem Solving`, focusArea: 'Past papers and MCQ drills', estimatedMinutes: 60, completed: false },
           { day: 3, topic: `${subject} Mock Exam & Review`, focusArea: 'Full speed assessment and doubt clearance', estimatedMinutes: 60, completed: false }
         ]
-      };
-      planCreated = true;
+        };
+        planCreated = true;
+      }
     }
 
     setState(prev => ({

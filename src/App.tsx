@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { SharedProvider, useSharedContext } from './context/SharedContext';
 import { SmartphoneFrame } from './components/layout/SmartphoneFrame';
 import { BottomNav } from './components/layout/BottomNav';
@@ -8,55 +8,91 @@ import { VisualHub } from './components/visual/VisualHub';
 import { ProductivityHub } from './components/productivity/ProductivityHub';
 import './App.css';
 
+type AppTab = 'visual' | 'study' | 'productivity';
+
 const AppContent: React.FC = () => {
   const { tasks } = useSharedContext();
-  const [activeTab, setActiveTab] = useState<'visual' | 'study' | 'productivity'>('visual');
+  const [activeTab, setActiveTab] = useState<AppTab>('visual');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const pendingTasksCount = tasks.filter(t => t.status !== 'completed').length;
+  const navigateTo = useCallback((nextTab: AppTab) => {
+    if (nextTab === activeTab || isTransitioning) return;
+    setIsTransitioning(true);
+    window.setTimeout(() => {
+      setActiveTab(nextTab);
+      window.requestAnimationFrame(() => setIsTransitioning(false));
+    }, 120);
+  }, [activeTab, isTransitioning]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsSettingsOpen(false);
+        return;
+      }
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      const shortcuts: Record<string, AppTab> = { '1': 'visual', '2': 'study', '3': 'productivity' };
+      const nextTab = shortcuts[event.key];
+      if (nextTab) navigateTo(nextTab);
+    };
+
+    let touchStartX = 0;
+    const onTouchStart = (event: TouchEvent) => {
+      touchStartX = event.changedTouches[0]?.clientX ?? 0;
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      const touchEndX = event.changedTouches[0]?.clientX ?? 0;
+      const distance = touchEndX - touchStartX;
+      if (Math.abs(distance) < 56) return;
+      const tabs: AppTab[] = ['visual', 'study', 'productivity'];
+      const nextIndex = tabs.indexOf(activeTab) + (distance < 0 ? 1 : -1);
+      if (nextIndex >= 0 && nextIndex < tabs.length) navigateTo(tabs[nextIndex]);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [activeTab, navigateTo]);
+
+  const pendingTasksCount = tasks.filter(task => task.status !== 'completed').length;
 
   return (
     <>
       <SmartphoneFrame
         activeTab={activeTab}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        bottomNav={
+          <BottomNav
+            activeTab={activeTab}
+            setActiveTab={navigateTo}
+            unreadTasksCount={pendingTasksCount}
+          />
+        }
       >
-        {activeTab === 'visual' && (
-          <VisualHub
-            onNavigateToStudy={() => setActiveTab('study')}
-            onNavigateToProductivity={() => setActiveTab('productivity')}
-          />
-        )}
+        <div className={`screen-view ${isTransitioning ? 'is-leaving' : 'is-entering'}`} key={activeTab}>
+          {activeTab === 'visual' && (
+            <VisualHub
+              onNavigateToStudy={() => navigateTo('study')}
+              onNavigateToProductivity={() => navigateTo('productivity')}
+            />
+          )}
 
-        {activeTab === 'study' && <StudyDashboard />}
+          {activeTab === 'study' && <StudyDashboard />}
 
-        {activeTab === 'productivity' && (
-          <ProductivityHub
-            onNavigateToStudy={() => setActiveTab('study')}
-          />
-        )}
+          {activeTab === 'productivity' && (
+            <ProductivityHub
+              onNavigateToStudy={() => navigateTo('study')}
+            />
+          )}
+        </div>
       </SmartphoneFrame>
 
-      {/* Embedded Bottom Navigation inside Phone Viewport */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '100%',
-          maxWidth: '432px',
-          zIndex: 60
-        }}
-      >
-        <BottomNav
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          unreadTasksCount={pendingTasksCount}
-        />
-      </div>
-
-      {/* Settings & Key Drawer Modal */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

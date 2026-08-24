@@ -53,8 +53,8 @@ export const MiniCalendar: React.FC = () => {
           className="animate-slide-up"
           style={{
             padding: '10px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: '10px',
+            background: 'var(--surface-muted)',
+            borderRadius: '5px',
             border: '1px solid var(--border-subtle)',
             display: 'flex',
             flexDirection: 'column',
@@ -70,10 +70,10 @@ export const MiniCalendar: React.FC = () => {
             onChange={e => setTitle(e.target.value)}
             style={{
               padding: '6px 10px',
-              borderRadius: '6px',
-              background: '#090e18',
+              borderRadius: '3px',
+              background: 'var(--surface-muted)',
               border: '1px solid var(--border-subtle)',
-              color: '#fff',
+              color: 'var(--text)',
               fontSize: '12px'
             }}
           />
@@ -85,10 +85,10 @@ export const MiniCalendar: React.FC = () => {
               onChange={e => setDate(e.target.value)}
               style={{
                 padding: '6px',
-                borderRadius: '6px',
-                background: '#090e18',
+                borderRadius: '3px',
+                background: 'var(--surface-muted)',
                 border: '1px solid var(--border-subtle)',
-                color: '#fff',
+                color: 'var(--text)',
                 fontSize: '11px'
               }}
             />
@@ -98,10 +98,10 @@ export const MiniCalendar: React.FC = () => {
               onChange={e => setTime(e.target.value)}
               style={{
                 padding: '6px',
-                borderRadius: '6px',
-                background: '#090e18',
+                borderRadius: '3px',
+                background: 'var(--surface-muted)',
                 border: '1px solid var(--border-subtle)',
-                color: '#fff',
+                color: 'var(--text)',
                 fontSize: '11px'
               }}
             />
@@ -124,8 +124,8 @@ export const MiniCalendar: React.FC = () => {
             key={event.id}
             style={{
               padding: '10px 12px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '5px',
+              background: 'var(--surface-muted)',
               border: '1px solid var(--border-subtle)',
               display: 'flex',
               alignItems: 'center',
@@ -134,7 +134,7 @@ export const MiniCalendar: React.FC = () => {
           >
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#fff' }}>{event.title}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)' }}>{event.title}</span>
                 <span className={`badge ${event.category === 'exam' ? 'badge-red' : event.category === 'competition' ? 'badge-amber' : 'badge-purple'}`}>
                   {event.category}
                 </span>
@@ -142,18 +142,18 @@ export const MiniCalendar: React.FC = () => {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '10px', color: 'var(--text-dim)', marginTop: '4px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                  <CalendarIcon size={10} color="#00f0ff" />
+                  <CalendarIcon size={10} color="#d08a67" />
                   {event.date}
                 </span>
                 {event.time && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <Clock size={10} color="#fbbf24" />
+                    <Clock size={10} color="#e3b56d" />
                     {event.time}
                   </span>
                 )}
                 {event.location && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <MapPin size={10} color="#fb7185" />
+                    <MapPin size={10} color="#e39485" />
                     {event.location}
                   </span>
                 )}
@@ -166,7 +166,7 @@ export const MiniCalendar: React.FC = () => {
               style={{ width: '24px', height: '24px', padding: 0 }}
               title="Delete Event"
             >
-              <Trash2 size={12} color="#f43f5e" />
+              <Trash2 size={12} color="#d27568" />
             </button>
           </div>
         ))}

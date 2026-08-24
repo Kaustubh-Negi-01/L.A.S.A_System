@@ -57,12 +57,16 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
   };
 
   const primaryEvent = scan.extractedEvents[0];
+  const wasAlreadyInSync = dispatchResult.dispatched
+    && dispatchResult.addedTasks === 0
+    && dispatchResult.addedEvents === 0
+    && !dispatchResult.planCreated;
 
   return (
     <div className="glass-panel animate-slide-up" style={{ padding: '18px' }}>
       <div className="card-header-row">
         <div className="card-title">
-          <Sparkles size={18} color="#00f0ff" />
+          <Sparkles size={18} color="#d08a67" />
           <span>Extracted Document Intelligence</span>
         </div>
         <span className="badge badge-green">AI Processed</span>
@@ -70,7 +74,7 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
 
       {/* Title & Summary */}
       <div style={{ marginBottom: '14px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#fff' }}>{scan.title}</h3>
+        <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{scan.title}</h3>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: 1.45 }}>
           {scan.summary}
         </p>
@@ -81,14 +85,14 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
         <div
           style={{
             padding: '12px 14px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)',
-            border: '1px solid rgba(0, 240, 255, 0.25)',
+            borderRadius: '3px',
+            background: 'linear-gradient(135deg, rgba(208, 138, 103, 0.08) 0%, rgba(156, 132, 128, 0.08) 100%)',
+            border: '1px solid rgba(208, 138, 103, 0.25)',
             marginBottom: '14px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)' }}>
               {primaryEvent.title}
             </span>
             <span className="badge badge-purple">{primaryEvent.category}</span>
@@ -96,18 +100,18 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Calendar size={12} color="#00f0ff" />
+              <Calendar size={12} color="#d08a67" />
               <span>{primaryEvent.date}</span>
             </div>
             {primaryEvent.time && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Clock size={12} color="#fbbf24" />
+                <Clock size={12} color="#e3b56d" />
                 <span>{primaryEvent.time}</span>
               </div>
             )}
             {primaryEvent.location && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', gridColumn: 'span 2' }}>
-                <MapPin size={12} color="#fb7185" />
+                <MapPin size={12} color="#e39485" />
                 <span>{primaryEvent.location}</span>
               </div>
             )}
@@ -130,14 +134,14 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
                   alignItems: 'center',
                   gap: '8px',
                   padding: '8px 10px',
-                  borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  borderRadius: '4px',
+                  background: 'var(--surface-muted)',
                   border: '1px solid var(--border-subtle)',
                   fontSize: '12px',
-                  color: '#e2e8f0'
+                  color: 'var(--text)'
                 }}
               >
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00f0ff' }} />
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#d08a67' }} />
                 <span>{item}</span>
               </div>
             ))}
@@ -150,20 +154,26 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
         <div
           style={{
             padding: '12px',
-            borderRadius: '12px',
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
+            borderRadius: '3px',
+            background: 'rgba(166, 178, 123, 0.1)',
+            border: '1px solid rgba(166, 178, 123, 0.3)',
             marginBottom: '16px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#34d399', fontWeight: 700, fontSize: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#a6b27b', fontWeight: 700, fontSize: '12px' }}>
             <CheckCircle size={15} />
-            <span>Successfully Dispatched Across Assistant!</span>
+            <span>{wasAlreadyInSync ? 'Already synced across L.A.S.A.' : 'Successfully synced across L.A.S.A.'}</span>
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            • Added {dispatchResult.addedEvents} event(s) to Calendar<br />
-            • Created {dispatchResult.addedTasks} new productivity task(s)<br />
-            {dispatchResult.planCreated && '• Initialized dynamic Adaptive Study Plan in Study Coach'}
+            {wasAlreadyInSync ? (
+              <>This scan is already connected to your calendar, tasks, and study context.</>
+            ) : (
+              <>
+                • Added {dispatchResult.addedEvents} event(s) to Calendar<br />
+                • Created {dispatchResult.addedTasks} new productivity task(s)<br />
+                {dispatchResult.planCreated && '• Initialized dynamic Adaptive Study Plan in Study Coach'}
+              </>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>

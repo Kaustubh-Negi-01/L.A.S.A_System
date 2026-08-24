@@ -21,7 +21,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setTimeout(() => setSavedSuccess(false), 2000);
   };
 
-  const isKeyActive = Boolean(customApiKey || import.meta.env.VITE_GEMINI_API_KEY);
+  const isKeyActive = aiMode === 'gemini' && Boolean(customApiKey || import.meta.env.VITE_GEMINI_API_KEY);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -30,7 +30,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         <div className="card-header-row" style={{ marginBottom: 0 }}>
           <div className="card-title">
-            <Cpu size={18} color="#00f0ff" />
+            <Cpu size={18} color="#d08a67" />
             <span>Assistant Settings & AI Config</span>
           </div>
           <button className="icon-btn" onClick={onClose}>
@@ -43,26 +43,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           className="glass-panel"
           style={{
             padding: '12px 14px',
-            background: isKeyActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 184, 0, 0.1)',
-            borderColor: isKeyActive ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 184, 0, 0.3)',
+            background: isKeyActive ? 'rgba(166, 178, 123, 0.1)' : 'rgba(227, 181, 109, 0.1)',
+            borderColor: isKeyActive ? 'rgba(166, 178, 123, 0.3)' : 'rgba(227, 181, 109, 0.3)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px'
           }}
         >
           {isKeyActive ? (
-            <ShieldCheck size={24} color="#34d399" />
+            <ShieldCheck size={24} color="#a6b27b" />
           ) : (
-            <Cpu size={24} color="#fbbf24" />
+            <Cpu size={24} color="#e3b56d" />
           )}
           <div>
-            <div style={{ fontWeight: 700, fontSize: '13px', color: isKeyActive ? '#34d399' : '#fbbf24' }}>
-              {isKeyActive ? 'Gemini 1.5 Flash Connected' : 'Smart Simulation Failover Engine Active'}
+            <div style={{ fontWeight: 700, fontSize: '13px', color: isKeyActive ? '#a6b27b' : '#e3b56d' }}>
+              {isKeyActive
+                ? 'Gemini 1.5 Flash Connected'
+                : aiMode === 'simulation'
+                  ? 'Smart Simulation Engine Active'
+                  : 'Gemini mode ready — add an API key'}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               {isKeyActive
-                ? 'Direct calls to Google Generative AI with automatic mock failover.'
-                : 'Zero-failure mode enabled for fast offline hackathon evaluation.'}
+                ? 'Live inference is enabled with automatic local fallback.'
+                : aiMode === 'simulation'
+                  ? 'Fast, private, zero-key mode for offline evaluation.'
+                  : 'Add a Gemini API key to enable live inference; local fallback remains available.'}
             </div>
           </div>
         </div>
@@ -70,7 +76,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         {/* Custom API Key Input */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Key size={14} color="#00f0ff" />
+            <Key size={14} color="#d08a67" />
             Gemini API Key (Optional Override)
           </label>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -82,10 +88,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               style={{
                 flex: 1,
                 padding: '10px 14px',
-                borderRadius: '12px',
-                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '3px',
+                background: 'var(--surface-raised)',
                 border: '1px solid var(--border-subtle)',
-                color: '#fff',
+                color: 'var(--text)',
                 fontSize: '13px'
               }}
             />
@@ -163,11 +169,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               style={{
                 marginTop: '10px',
                 padding: '12px',
-                background: '#040711',
-                borderRadius: '12px',
+                background: 'var(--surface-muted)',
+                borderRadius: '3px',
                 border: '1px solid var(--border-subtle)',
                 fontSize: '10px',
-                color: '#34d399',
+                color: '#a6b27b',
                 maxHeight: '160px',
                 overflowY: 'auto',
                 fontFamily: 'var(--font-mono)'

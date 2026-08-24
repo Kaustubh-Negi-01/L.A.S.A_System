@@ -21,7 +21,10 @@ import {
 } from './mockData';
 
 // Helper to get active API key
-export function getActiveApiKey(customKey?: string): string {
+export type AiMode = 'gemini' | 'simulation';
+
+export function getActiveApiKey(customKey?: string, mode: AiMode = 'gemini'): string {
+  if (mode === 'simulation') return '';
   if (customKey && customKey.trim().length > 10) {
     return customKey.trim();
   }
@@ -44,9 +47,10 @@ function cleanJsonResponse(text: string): string {
 export async function extractVisualInsights(
   imageBase64: string,
   mimeType: string,
-  customApiKey?: string
+  customApiKey?: string,
+  aiMode: AiMode = 'gemini'
 ): Promise<VisualScanResult> {
-  const apiKey = getActiveApiKey(customApiKey);
+  const apiKey = getActiveApiKey(customApiKey, aiMode);
   
   if (!apiKey) {
     console.info('Using Mock Failover for Visual Insights (No API Key)');
@@ -120,9 +124,10 @@ Return strictly a valid JSON object matching this TypeScript interface without m
 // --- 2. Adaptive Study Plan Generator ---
 export async function generateStudyPlan(
   req: StudyPlanRequest,
-  customApiKey?: string
+  customApiKey?: string,
+  aiMode: AiMode = 'gemini'
 ): Promise<StudyPlan> {
-  const apiKey = getActiveApiKey(customApiKey);
+  const apiKey = getActiveApiKey(customApiKey, aiMode);
 
   if (!apiKey) {
     console.info('Using Mock Failover for Study Plan');
@@ -191,9 +196,10 @@ Return strictly a valid JSON object matching this structure:
 // --- 3. Dynamic Quiz Generator ---
 export async function generateQuiz(
   req: QuizRequest,
-  customApiKey?: string
+  customApiKey?: string,
+  aiMode: AiMode = 'gemini'
 ): Promise<QuizQuestion[]> {
-  const apiKey = getActiveApiKey(customApiKey);
+  const apiKey = getActiveApiKey(customApiKey, aiMode);
 
   if (!apiKey) {
     console.info('Using Mock Failover for Quiz Generation');
@@ -246,9 +252,10 @@ Return strictly a valid JSON array of question objects without markdown tags:
 // --- 4. Quiz Evaluation & Mistake Analysis with Dynamic Adaptation ---
 export async function evaluateQuizAndAdapt(
   req: QuizEvaluationRequest,
-  customApiKey?: string
+  customApiKey?: string,
+  aiMode: AiMode = 'gemini'
 ): Promise<QuizResult> {
-  const apiKey = getActiveApiKey(customApiKey);
+  const apiKey = getActiveApiKey(customApiKey, aiMode);
 
   if (!apiKey) {
     console.info('Using Mock Failover for Quiz Evaluation');
@@ -311,9 +318,10 @@ Return strictly a JSON object matching this schema:
 export async function breakdownTask(
   taskTitle: string,
   description?: string,
-  customApiKey?: string
+  customApiKey?: string,
+  aiMode: AiMode = 'gemini'
 ): Promise<TaskStep[]> {
-  const apiKey = getActiveApiKey(customApiKey);
+  const apiKey = getActiveApiKey(customApiKey, aiMode);
 
   if (!apiKey) {
     return generateMockTaskBreakdown(taskTitle);
@@ -356,9 +364,10 @@ Return strictly a JSON array of step titles:
 // --- 6. Next Action Recommendation ---
 export async function recommendNextAction(
   state: SharedAppState,
-  customApiKey?: string
+  customApiKey?: string,
+  aiMode: AiMode = 'gemini'
 ): Promise<NextActionRecommendation> {
-  const apiKey = getActiveApiKey(customApiKey);
+  const apiKey = getActiveApiKey(customApiKey, aiMode);
 
   if (!apiKey) {
     return generateMockNextAction(state);

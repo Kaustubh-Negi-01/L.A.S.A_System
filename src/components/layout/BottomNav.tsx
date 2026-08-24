@@ -7,59 +7,45 @@ interface BottomNavProps {
   unreadTasksCount?: number;
 }
 
+const navItems = [
+  { id: 'visual' as const, label: 'Understand', caption: 'Scan & extract', icon: Eye },
+  { id: 'study' as const, label: 'Study Coach', caption: 'Plan & practice', icon: GraduationCap },
+  { id: 'productivity' as const, label: 'Productivity', caption: 'Tasks & schedule', icon: Zap }
+];
+
 export const BottomNav: React.FC<BottomNavProps> = ({
   activeTab,
   setActiveTab,
   unreadTasksCount = 0
 }) => {
   return (
-    <nav className="bottom-nav-bar">
-      <button
-        className={`nav-tab-btn ${activeTab === 'visual' ? 'active' : ''}`}
-        onClick={() => setActiveTab('visual')}
-      >
-        <Eye className="nav-icon" size={20} />
-        <span>Understand</span>
-        {activeTab === 'visual' && <div className="nav-active-pill" />}
-      </button>
-
-      <button
-        className={`nav-tab-btn ${activeTab === 'study' ? 'active' : ''}`}
-        onClick={() => setActiveTab('study')}
-      >
-        <GraduationCap className="nav-icon" size={20} />
-        <span>Study Coach</span>
-        {activeTab === 'study' && <div className="nav-active-pill" />}
-      </button>
-
-      <button
-        className={`nav-tab-btn ${activeTab === 'productivity' ? 'active' : ''}`}
-        onClick={() => setActiveTab('productivity')}
-      >
-        <div style={{ position: 'relative' }}>
-          <Zap className="nav-icon" size={20} />
-          {unreadTasksCount > 0 && (
-            <span
-              style={{
-                position: 'absolute',
-                top: -3,
-                right: -8,
-                background: '#f43f5e',
-                color: '#fff',
-                fontSize: '9px',
-                fontWeight: 800,
-                borderRadius: '999px',
-                padding: '1px 4px',
-                lineHeight: 1
-              }}
-            >
-              {unreadTasksCount}
+    <nav className="bottom-nav-bar" aria-label="Primary workspace navigation">
+      {navItems.map(({ id, label, caption, icon: Icon }, index) => {
+        const isActive = activeTab === id;
+        return (
+          <button
+            key={id}
+            className={`nav-tab-btn ${isActive ? 'active' : ''}`}
+            onClick={() => setActiveTab(id)}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            <span className="nav-icon-wrap">
+              <Icon className="nav-icon" size={18} />
+              {id === 'productivity' && unreadTasksCount > 0 && (
+                <span className="nav-count" aria-label={`${unreadTasksCount} open tasks`}>
+                  {unreadTasksCount}
+                </span>
+              )}
             </span>
-          )}
-        </div>
-        <span>Productivity</span>
-        {activeTab === 'productivity' && <div className="nav-active-pill" />}
-      </button>
+            <span className="nav-copy">
+              <strong>{label}</strong>
+              <small>{caption}</small>
+            </span>
+            <span className="nav-index">0{index + 1}</span>
+            {isActive && <span className="nav-active-pill" />}
+          </button>
+        );
+      })}
     </nav>
   );
 };

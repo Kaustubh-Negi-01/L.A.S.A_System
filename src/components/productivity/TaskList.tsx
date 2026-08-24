@@ -25,6 +25,7 @@ export const TaskList: React.FC = () => {
   const [newDueDate, setNewDueDate] = useState(() => new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [breakingDownId, setBreakingDownId] = useState<string | null>(null);
+  const [taskFilter, setTaskFilter] = useState<'all' | 'open' | 'done'>('open');
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,13 +61,22 @@ export const TaskList: React.FC = () => {
 
   const pendingTasks = tasks.filter(t => t.status !== 'completed');
   const completedTasks = tasks.filter(t => t.status === 'completed');
+  const priorityRank: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
+  const visibleTasks = [...tasks]
+    .filter(task => taskFilter === 'all' || (taskFilter === 'open' ? task.status !== 'completed' : task.status === 'completed'))
+    .sort((a, b) => {
+      if (taskFilter === 'done') return b.createdAt.localeCompare(a.createdAt);
+      const priorityDifference = priorityRank[a.priority] - priorityRank[b.priority];
+      if (priorityDifference !== 0) return priorityDifference;
+      return (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31');
+    });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div id="task-list" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       {/* Header & Add Button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Layers size={16} color="#00f0ff" />
+          <Layers size={16} color="#d08a67" />
           <span>TASKS & SUB-STEP BREAKDOWNS</span>
           <span className="badge badge-cyan">{pendingTasks.length} Pending</span>
         </div>
@@ -74,11 +84,29 @@ export const TaskList: React.FC = () => {
         <button
           className="btn-primary"
           onClick={() => setIsAddingTask(true)}
-          style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '10px' }}
+          style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '5px' }}
         >
           <Plus size={14} />
           <span>Add Task</span>
         </button>
+      </div>
+
+      <div className="task-filter-bar" role="tablist" aria-label="Task filters">
+        {([
+          ['open', `Open ${pendingTasks.length}`],
+          ['all', `All ${tasks.length}`],
+          ['done', `Done ${completedTasks.length}`]
+        ] as const).map(([filter, label]) => (
+          <button
+            key={filter}
+            role="tab"
+            aria-selected={taskFilter === filter}
+            className={`task-filter-btn ${taskFilter === filter ? 'active' : ''}`}
+            onClick={() => setTaskFilter(filter)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Add Task Inline Card */}
@@ -88,7 +116,7 @@ export const TaskList: React.FC = () => {
           className="glass-panel animate-slide-up"
           style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px', borderColor: 'var(--primary-cyan)' }}
         >
-          <div style={{ fontSize: '12px', fontWeight: 700, color: '#00f0ff' }}>New Task</div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: '#d08a67' }}>New Task</div>
           <input
             type="text"
             required
@@ -97,10 +125,10 @@ export const TaskList: React.FC = () => {
             onChange={e => setNewTitle(e.target.value)}
             style={{
               padding: '8px 12px',
-              borderRadius: '8px',
-              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '4px',
+              background: 'var(--surface-raised)',
               border: '1px solid var(--border-subtle)',
-              color: '#fff',
+              color: 'var(--text)',
               fontSize: '12px'
             }}
           />
@@ -112,10 +140,10 @@ export const TaskList: React.FC = () => {
             onChange={e => setNewDesc(e.target.value)}
             style={{
               padding: '8px 12px',
-              borderRadius: '8px',
-              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '4px',
+              background: 'var(--surface-raised)',
               border: '1px solid var(--border-subtle)',
-              color: '#fff',
+              color: 'var(--text)',
               fontSize: '12px'
             }}
           />
@@ -126,10 +154,10 @@ export const TaskList: React.FC = () => {
               onChange={e => setNewPriority(e.target.value as TaskPriority)}
               style={{
                 padding: '8px',
-                borderRadius: '8px',
-                background: '#090e18',
+                borderRadius: '4px',
+                background: 'var(--surface-muted)',
                 border: '1px solid var(--border-subtle)',
-                color: '#fff',
+                color: 'var(--text)',
                 fontSize: '12px'
               }}
             >
@@ -144,10 +172,10 @@ export const TaskList: React.FC = () => {
               onChange={e => setNewDueDate(e.target.value)}
               style={{
                 padding: '8px',
-                borderRadius: '8px',
-                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '4px',
+                background: 'var(--surface-raised)',
                 border: '1px solid var(--border-subtle)',
-                color: '#fff',
+                color: 'var(--text)',
                 fontSize: '12px'
               }}
             />
@@ -175,7 +203,13 @@ export const TaskList: React.FC = () => {
 
       {/* Task List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {tasks.map(task => {
+        {visibleTasks.length === 0 ? (
+          <div className="task-empty-state">
+            <CheckCircle2 size={20} />
+            <strong>{taskFilter === 'done' ? 'No completed tasks yet' : 'Your task list is clear'}</strong>
+            <span>{taskFilter === 'done' ? 'Completed work will collect here.' : 'Add a task or dispatch one from a scan to keep momentum.'}</span>
+          </div>
+        ) : visibleTasks.map(task => {
           const isExpanded = expandedTaskId === task.id;
           const isCompleted = task.status === 'completed';
           const completedStepsCount = task.steps.filter(s => s.isCompleted).length;
@@ -187,7 +221,7 @@ export const TaskList: React.FC = () => {
               style={{
                 padding: '12px',
                 opacity: isCompleted ? 0.6 : 1,
-                borderColor: task.priority === 'high' ? 'rgba(244, 63, 94, 0.3)' : 'var(--border-subtle)'
+                borderColor: task.priority === 'high' ? 'rgba(210, 117, 104, 0.3)' : 'var(--border-subtle)'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
@@ -196,9 +230,9 @@ export const TaskList: React.FC = () => {
                   style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1, cursor: 'pointer' }}
                 >
                   {isCompleted ? (
-                    <CheckCircle2 size={18} color="#34d399" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <CheckCircle2 size={18} color="#a6b27b" style={{ flexShrink: 0, marginTop: '2px' }} />
                   ) : (
-                    <Circle size={18} color={task.priority === 'high' ? '#fb7185' : '#64748b'} style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <Circle size={18} color={task.priority === 'high' ? '#e39485' : '#7f746d'} style={{ flexShrink: 0, marginTop: '2px' }} />
                   )}
 
                   <div>
@@ -206,7 +240,7 @@ export const TaskList: React.FC = () => {
                       style={{
                         fontSize: '13px',
                         fontWeight: 600,
-                        color: isCompleted ? '#94a3b8' : '#fff',
+                        color: isCompleted ? '#b9aaa0' : '#fff',
                         textDecoration: isCompleted ? 'line-through' : 'none'
                       }}
                     >
@@ -256,7 +290,7 @@ export const TaskList: React.FC = () => {
                     style={{ width: '28px', height: '28px' }}
                     title="Delete"
                   >
-                    <Trash2 size={13} color="#f43f5e" />
+                    <Trash2 size={13} color="#d27568" />
                   </button>
                 </div>
               </div>
@@ -267,7 +301,7 @@ export const TaskList: React.FC = () => {
                   style={{
                     marginTop: '12px',
                     paddingTop: '10px',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderTop: '1px solid var(--line)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '6px'
@@ -314,20 +348,20 @@ export const TaskList: React.FC = () => {
                         alignItems: 'center',
                         gap: '8px',
                         padding: '6px 8px',
-                        borderRadius: '6px',
-                        background: 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: '3px',
+                        background: 'var(--surface-muted)',
                         cursor: 'pointer'
                       }}
                     >
                       {step.isCompleted ? (
-                        <CheckCircle2 size={14} color="#34d399" />
+                        <CheckCircle2 size={14} color="#a6b27b" />
                       ) : (
-                        <Circle size={14} color="#64748b" />
+                        <Circle size={14} color="#7f746d" />
                       )}
                       <span
                         style={{
                           fontSize: '12px',
-                          color: step.isCompleted ? '#64748b' : '#cbd5e1',
+                          color: step.isCompleted ? '#7f746d' : '#d8ccc1',
                           textDecoration: step.isCompleted ? 'line-through' : 'none'
                         }}
                       >

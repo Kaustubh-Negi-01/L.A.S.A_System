@@ -8,7 +8,7 @@ interface StudyPlanGeneratorProps {
 }
 
 export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCreated }) => {
-  const { addStudyPlan, customApiKey } = useSharedContext();
+  const { addStudyPlan, customApiKey, aiMode } = useSharedContext();
   const [subject, setSubject] = useState('');
   const [examDate, setExamDate] = useState(() => {
     const d = new Date(Date.now() + 86400000 * 4);
@@ -45,7 +45,8 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
           goal: goal.trim(),
           knownWeaknesses: weaknesses
         },
-        customApiKey
+        customApiKey,
+        aiMode
       );
 
       addStudyPlan(newPlan);
@@ -61,7 +62,7 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
     <div className="glass-panel animate-slide-up" style={{ padding: '18px' }}>
       <div className="card-header-row">
         <div className="card-title">
-          <BookOpen size={18} color="#00f0ff" />
+          <BookOpen size={18} color="#d08a67" />
           <span>Create Adaptive Study Plan</span>
         </div>
         <span className="badge badge-cyan">AI Powered</span>
@@ -104,7 +105,7 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
         {/* Subject Input */}
         <div>
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-            <BookOpen size={13} color="#00f0ff" />
+            <BookOpen size={13} color="#d08a67" />
             Subject or Course
           </label>
           <input
@@ -116,10 +117,10 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
             style={{
               width: '100%',
               padding: '10px 12px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '5px',
+              background: 'var(--surface-raised)',
               border: '1px solid var(--border-subtle)',
-              color: '#fff',
+              color: 'var(--text)',
               fontSize: '13px'
             }}
           />
@@ -140,10 +141,10 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
               style={{
                 width: '100%',
                 padding: '9px 10px',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '5px',
+                background: 'var(--surface-raised)',
                 border: '1px solid var(--border-subtle)',
-                color: '#fff',
+                color: 'var(--text)',
                 fontSize: '12px'
               }}
             />
@@ -151,7 +152,7 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
 
           <div>
             <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-              <Clock size={13} color="#fbbf24" />
+              <Clock size={13} color="#e3b56d" />
               Daily Study Time
             </label>
             <select
@@ -160,10 +161,10 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
               style={{
                 width: '100%',
                 padding: '9px 10px',
-                borderRadius: '10px',
-                background: '#090e18',
+                borderRadius: '5px',
+                background: 'var(--surface-muted)',
                 border: '1px solid var(--border-subtle)',
-                color: '#fff',
+                color: 'var(--text)',
                 fontSize: '12px'
               }}
             >
@@ -179,7 +180,7 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
         {/* Goal / Target */}
         <div>
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-            <Target size={13} color="#34d399" />
+            <Target size={13} color="#a6b27b" />
             Target Goal / Grade
           </label>
           <input
@@ -190,10 +191,10 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
             style={{
               width: '100%',
               padding: '9px 12px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '5px',
+              background: 'var(--surface-raised)',
               border: '1px solid var(--border-subtle)',
-              color: '#fff',
+              color: 'var(--text)',
               fontSize: '12px'
             }}
           />
@@ -202,7 +203,7 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
         {/* Known Weak Areas */}
         <div>
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-            <PlusCircle size={13} color="#fb7185" />
+            <PlusCircle size={13} color="#e39485" />
             Known Weak Topics (Optional)
           </label>
           <input
@@ -213,10 +214,10 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
             style={{
               width: '100%',
               padding: '9px 12px',
-              borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '5px',
+              background: 'var(--surface-raised)',
               border: '1px solid var(--border-subtle)',
-              color: '#fff',
+              color: 'var(--text)',
               fontSize: '12px'
             }}
           />
