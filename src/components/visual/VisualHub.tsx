@@ -7,7 +7,7 @@ import { VisualScanResult } from '../../types';
 
 interface VisualHubProps {
   onNavigateToStudy: () => void;
-  onNavigateToProductivity: () => void;
+  onNavigateToProductivity: (taskId?: string) => void;
 }
 
 export const VisualHub: React.FC<VisualHubProps> = ({

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Zap, Sparkles } from 'lucide-react';
 import { NextActionCard } from './NextActionCard';
 import { TaskList } from './TaskList';
@@ -6,17 +6,27 @@ import { MiniCalendar } from './MiniCalendar';
 
 interface ProductivityHubProps {
   onNavigateToStudy: () => void;
+  focusTaskId?: string | null;
 }
 
-export const ProductivityHub: React.FC<ProductivityHubProps> = ({ onNavigateToStudy }) => {
-  const handleExecuteAction = (actionType: string, _refId?: string) => {
+export const ProductivityHub: React.FC<ProductivityHubProps> = ({ onNavigateToStudy, focusTaskId }) => {
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  const handleExecuteAction = (actionType: string, refId?: string) => {
+    setActionMessage(null);
     if (actionType === 'start_quiz' || actionType === 'study_milestone') {
       onNavigateToStudy();
       return;
     }
 
     if (actionType === 'urgent_task') {
-      document.getElementById('task-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const target = refId ? document.getElementById(`task-${refId}`) : document.getElementById('task-list');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    if (actionType === 'relax') {
+      setActionMessage('You have cleared the urgent queue. Take a short reset before the next action.');
     }
   };
 
@@ -47,8 +57,14 @@ export const ProductivityHub: React.FC<ProductivityHubProps> = ({ onNavigateToSt
       {/* AI Next Action Card */}
       <NextActionCard onExecuteAction={handleExecuteAction} />
 
+      {actionMessage && (
+        <div role="status" aria-live="polite" style={{ padding: '10px 12px', borderRadius: '5px', background: 'rgba(166, 178, 123, 0.08)', border: '1px solid rgba(166, 178, 123, 0.24)', color: 'var(--text-muted)', fontSize: '11px' }}>
+          {actionMessage}
+        </div>
+      )}
+
       {/* Main Task List */}
-      <TaskList />
+      <TaskList focusTaskId={focusTaskId} />
 
       {/* Schedule / Extracted Events */}
       <MiniCalendar />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   CheckCircle2,
   Circle,
@@ -16,7 +16,11 @@ import {
 import { useSharedContext } from '../../context/SharedContext';
 import { Task, TaskPriority } from '../../types';
 
-export const TaskList: React.FC = () => {
+interface TaskListProps {
+  focusTaskId?: string | null;
+}
+
+export const TaskList: React.FC<TaskListProps> = ({ focusTaskId }) => {
   const { tasks, addTask, updateTask, deleteTask, toggleTaskStep, breakdownTaskWithAI } = useSharedContext();
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -27,6 +31,16 @@ export const TaskList: React.FC = () => {
   const [breakingDownId, setBreakingDownId] = useState<string | null>(null);
   const [taskFilter, setTaskFilter] = useState<'all' | 'open' | 'done'>('open');
   const [celebratingTaskId, setCelebratingTaskId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!focusTaskId) return;
+    setTaskFilter('all');
+    setExpandedTaskId(focusTaskId);
+    const timer = window.setTimeout(() => {
+      document.getElementById(`task-${focusTaskId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [focusTaskId]);
 
   const handleToggleTask = (task: Task) => {
     const isCompleted = task.status === 'completed';
@@ -233,11 +247,13 @@ export const TaskList: React.FC = () => {
           return (
             <div
               key={task.id}
+              id={`task-${task.id}`}
               className={`glass-panel task-card ${celebratingTaskId === task.id ? 'task-card-completing' : ''}`}
               style={{
                 padding: '12px',
                 opacity: isCompleted ? 0.6 : 1,
-                borderColor: task.priority === 'high' ? 'rgba(210, 117, 104, 0.3)' : 'var(--border-subtle)'
+                borderColor: focusTaskId === task.id ? 'var(--primary-cyan)' : task.priority === 'high' ? 'rgba(210, 117, 104, 0.3)' : 'var(--border-subtle)',
+                boxShadow: focusTaskId === task.id ? '0 0 0 2px rgba(166, 178, 123, 0.18)' : undefined
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>

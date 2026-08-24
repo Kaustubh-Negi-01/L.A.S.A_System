@@ -35,6 +35,7 @@ interface SharedContextValue extends SharedAppState {
   // Quiz & Scans
   recordQuizResult: (result: QuizResult) => void;
   addScanResult: (scan: VisualScanResult) => void;
+  addTaskFromScanAction: (scan: VisualScanResult, actionIndex: number) => string;
   dispatchScanToApp: (scan: VisualScanResult) => { addedTasks: number; addedEvents: number; planCreated: boolean };
 
   // Settings & Reset
@@ -250,43 +251,74 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }));
   };
 
-  // --- Cross-Mode Dispatcher (Understand & Act -> Calendar & Tasks & Study Plan) ---
-  const dispatchScanToApp = (scan: VisualScanResult) => {
-    const alreadyDispatched = state.tasks.some(task => task.sourceReferenceId === scan.id)
-      || state.events.some(event => scan.extractedEvents.some(extracted => extracted.id === event.id));
+  const addTaskFromScanAction = (scan: VisualScanResult, actionIndex: number): string => {
+    const actionTitle = scan.actionItems[actionIndex];
+    if (!actionTitle) return '';
+    const existing = state.tasks.find(task => task.sourceReferenceId === scan.id
+      && (task.sourceActionIndex === actionIndex || task.title === actionTitle));
+    if (existing) return existing.id;
 
-    if (alreadyDispatched) {
-      return { addedTasks: 0, addedEvents: 0, planCreated: false };
-    }
-
-    let addedTasks = 0;
-    let addedEvents = 0;
-    let planCreated = false;
-
-    // 1. Add extracted events to calendar
-    const newEvents: ExtractedEvent[] = scan.extractedEvents.map(e => ({
-      ...e,
-      id: e.id || `evt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`
-    }));
-    addedEvents = newEvents.length;
-
-    // 2. Add action items as productivity tasks
-    const newTasks: Task[] = scan.actionItems.map((item, idx) => ({
-      id: `task-scan-${Date.now()}-${idx}`,
-      title: item,
+    const id = `task-scan-${Date.now()}-${actionIndex}`;
+    const newTask: Task = {
+      id,
+      title: actionTitle,
       description: `Extracted from: ${scan.title}`,
-      priority: idx === 0 ? 'high' : 'medium',
+      priority: actionIndex === 0 ? 'high' : 'medium',
       status: 'pending',
       dueDate: scan.extractedDates[0] || new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
       sourceModule: 'visual_scanner',
       sourceReferenceId: scan.id,
+      sourceActionIndex: actionIndex,
       createdAt: new Date().toISOString(),
       steps: [
-        { id: `s-1`, title: 'Read notice details', isCompleted: true },
-        { id: `s-2`, title: 'Prepare required materials', isCompleted: false },
-        { id: `s-3`, title: 'Confirm completion', isCompleted: false }
+        { id: `${id}-read`, title: 'Read notice details', isCompleted: true },
+        { id: `${id}-prepare`, title: 'Prepare required materials', isCompleted: false },
+        { id: `${id}-confirm`, title: 'Confirm completion', isCompleted: false }
       ]
-    }));
+    };
+    setState(prev => ({ ...prev, tasks: [newTask, ...prev.tasks] }));
+    return id;
+  };
+
+  // --- Cross-Mode Dispatcher (Understand & Act -> Calendar & Tasks & Study Plan) ---
+  const dispatchScanToApp = (scan: VisualScanResult) => {
+    let addedTasks = 0;
+    let addedEvents = 0;
+    let planCreated = false;
+
+    // 1. Add only events that are not already linked to this scan.
+    const existingEventIds = new Set(state.events.map(event => event.id));
+    const newEvents: ExtractedEvent[] = scan.extractedEvents
+      .filter(event => !existingEventIds.has(event.id))
+      .map(e => ({
+        ...e,
+        id: e.id || `evt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`
+      }));
+    addedEvents = newEvents.length;
+
+    // 2. Add only action items that have not already become tasks.
+    const newTasks: Task[] = scan.actionItems.flatMap((item, idx) => {
+      const exists = state.tasks.some(task => task.sourceReferenceId === scan.id
+        && (task.sourceActionIndex === idx || task.title === item));
+      if (exists) return [];
+      return [{
+        id: `task-scan-${Date.now()}-${idx}`,
+        title: item,
+        description: `Extracted from: ${scan.title}`,
+        priority: idx === 0 ? 'high' : 'medium',
+        status: 'pending' as const,
+        dueDate: scan.extractedDates[0] || new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+        sourceModule: 'visual_scanner' as const,
+        sourceReferenceId: scan.id,
+        sourceActionIndex: idx,
+        createdAt: new Date().toISOString(),
+        steps: [
+          { id: `s-${Date.now()}-${idx}-1`, title: 'Read notice details', isCompleted: true },
+          { id: `s-${Date.now()}-${idx}-2`, title: 'Prepare required materials', isCompleted: false },
+          { id: `s-${Date.now()}-${idx}-3`, title: 'Confirm completion', isCompleted: false }
+        ]
+      }];
+    });
     addedTasks = newTasks.length;
 
     // 3. If an exam is detected, auto-create a study plan if none exists for this subject
@@ -325,7 +357,7 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       tasks: [...newTasks, ...prev.tasks],
       studyPlans: newPlan ? [newPlan, ...prev.studyPlans] : prev.studyPlans,
       activeStudyPlanId: newPlan ? newPlan.id : prev.activeStudyPlanId,
-      scans: [scan, ...prev.scans.filter(s => s.id !== scan.id)]
+        scans: [scan, ...prev.scans.filter(s => s.id !== scan.id)]
     }));
 
     return { addedTasks, addedEvents, planCreated };
@@ -385,6 +417,7 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         adaptStudyPlanFromQuiz,
         recordQuizResult,
         addScanResult,
+        addTaskFromScanAction,
         dispatchScanToApp,
         setCustomApiKey,
         setAiMode,

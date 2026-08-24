@@ -609,6 +609,7 @@ Return strictly a JSON object:
       headline: parsed.headline || 'Continue Study Milestones',
       reason: parsed.reason || 'Keep up your daily revision momentum.',
       actionType: parsed.actionType || 'study_milestone',
+      referenceId: typeof parsed.referenceId === 'string' ? parsed.referenceId : undefined,
       urgency: parsed.urgency || 'medium'
     };
   } catch (error) {

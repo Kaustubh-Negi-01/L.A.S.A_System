@@ -8,6 +8,8 @@ import {
   GraduationCap,
   Sparkles,
   ExternalLink,
+  ArrowUpRight,
+  ListTodo,
   Share2,
   Copy,
   Check
@@ -19,7 +21,7 @@ import { useSharedContext } from '../../context/SharedContext';
 interface ExtractedInsightsProps {
   scan: VisualScanResult;
   onNavigateToStudy: () => void;
-  onNavigateToProductivity: () => void;
+  onNavigateToProductivity: (taskId?: string) => void;
   onScanAnother: () => void;
 }
 
@@ -29,8 +31,9 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
   onNavigateToProductivity,
   onScanAnother
 }) => {
-  const { dispatchScanToApp } = useSharedContext();
+  const { dispatchScanToApp, tasks, addTaskFromScanAction, updateTask } = useSharedContext();
   const [copied, setCopied] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const [dispatchResult, setDispatchResult] = useState<{
     dispatched: boolean;
     addedTasks: number;
@@ -63,6 +66,26 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
     && dispatchResult.addedTasks === 0
     && dispatchResult.addedEvents === 0
     && !dispatchResult.planCreated;
+
+  const getLinkedTask = (actionIndex: number) => tasks.find(task => task.sourceReferenceId === scan.id
+    && (task.sourceActionIndex === actionIndex || task.title === scan.actionItems[actionIndex]));
+
+  const handleActionToggle = (actionIndex: number) => {
+    const task = getLinkedTask(actionIndex);
+    const taskId = task?.id || addTaskFromScanAction(scan, actionIndex);
+    if (!taskId) return;
+    updateTask(taskId, { status: task?.status === 'completed' ? 'pending' : 'completed' });
+    setActionFeedback(task?.status === 'completed' ? 'Action reopened.' : 'Action marked complete.');
+    window.setTimeout(() => setActionFeedback(null), 1800);
+  };
+
+  const handleActionFollowUp = (actionIndex: number) => {
+    const task = getLinkedTask(actionIndex);
+    const taskId = task?.id || addTaskFromScanAction(scan, actionIndex);
+    if (!taskId) return;
+    setActionFeedback('Added to Productivity tasks.');
+    onNavigateToProductivity(taskId);
+  };
 
   const handleShare = async () => {
     const textToShare = `📋 ${scan.title}\n📅 Date: ${scan.extractedDates[0] || 'TBD'}\nSummary: ${scan.summary}\nAction Items:\n${scan.actionItems.map(a => '• ' + a).join('\n')}`;
@@ -209,11 +232,56 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
                   color: 'var(--text)'
                 }}
               >
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary-cyan)' }} />
-                <span>{item}</span>
+                <button
+                  type="button"
+                  onClick={() => handleActionToggle(idx)}
+                  aria-label={getLinkedTask(idx)?.status === 'completed' ? `Reopen action: ${item}` : `Complete action: ${item}`}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    padding: 0,
+                    display: 'grid',
+                    placeItems: 'center',
+                    flexShrink: 0,
+                    background: 'transparent',
+                    color: 'var(--text-muted)'
+                  }}
+                >
+                  {getLinkedTask(idx)?.status === 'completed' ? <CheckCircle size={16} color="#34d399" /> : <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary-cyan)' }} />}
+                </button>
+                <span style={{ flex: 1, textDecoration: getLinkedTask(idx)?.status === 'completed' ? 'line-through' : 'none', opacity: getLinkedTask(idx)?.status === 'completed' ? 0.6 : 1 }}>{item}</span>
+                <button
+                  type="button"
+                  onClick={() => handleActionFollowUp(idx)}
+                  title="Open this action in Productivity"
+                  aria-label={`Follow up on action: ${item}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 6px',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: '4px',
+                    background: 'var(--surface-raised)',
+                    color: 'var(--primary-cyan)',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}
+                >
+                  <ListTodo size={12} />
+                  <span>{getLinkedTask(idx) ? 'Open task' : 'Follow up'}</span>
+                  <ArrowUpRight size={11} />
+                </button>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {actionFeedback && (
+        <div role="status" aria-live="polite" style={{ marginBottom: '12px', padding: '8px 10px', borderRadius: '4px', background: 'rgba(52, 211, 153, 0.08)', border: '1px solid rgba(52, 211, 153, 0.25)', color: '#6ee7b7', fontSize: '11px', fontWeight: 700 }}>
+          {actionFeedback}
         </div>
       )}
 
@@ -255,7 +323,7 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
             </button>
             <button
               className="btn-purple"
-              onClick={onNavigateToProductivity}
+              onClick={() => onNavigateToProductivity()}
               style={{ flex: 1, fontSize: '11px', padding: '6px 10px' }}
             >
               <Zap size={13} />

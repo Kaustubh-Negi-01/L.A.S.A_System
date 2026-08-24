@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { SharedProvider } from './context/SharedContext';
+import { SharedProvider, useSharedContext } from './context/SharedContext';
 import { SmartphoneFrame } from './components/layout/SmartphoneFrame';
 import { ModeSelection, type AppTab } from './components/mode/ModeSelection';
 import { BottomNav } from './components/layout/BottomNav';
@@ -14,12 +14,13 @@ import { installInteractionSoundBridge, useInteractionFeedback } from './hooks/u
 const AppContent: React.FC = () => {
   useInteractionFeedback();
 
-    useEffect(() => installInteractionSoundBridge(), []);
-
+  useEffect(() => installInteractionSoundBridge(), []);
+  const { tasks } = useSharedContext();
   const [activeTab, setActiveTab] = useState<AppTab>('visual');
   const [isModeSelectionOpen, setIsModeSelectionOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
 
   const navigateTo = useCallback((nextTab: AppTab) => {
     if (nextTab === activeTab && !isModeSelectionOpen || isTransitioning) return;
@@ -74,6 +75,8 @@ const AppContent: React.FC = () => {
     };
   }, [activeTab, navigateTo]);
 
+  const pendingTasksCount = tasks.filter(task => task.status !== 'completed').length;
+
   return (
     <>
         <SmartphoneFrame
@@ -95,7 +98,11 @@ const AppContent: React.FC = () => {
           />
         }
         bottomNav={
-          <BottomNav activeTab={activeTab} />
+          <BottomNav
+            activeTab={activeTab}
+            setActiveTab={navigateTo}
+            unreadTasksCount={pendingTasksCount}
+          />
         }
       >
         <div className={`screen-view ${isTransitioning ? 'is-leaving' : 'is-entering'}`} key={isModeSelectionOpen ? 'mode-selection' : activeTab}>
@@ -104,7 +111,10 @@ const AppContent: React.FC = () => {
           {!isModeSelectionOpen && activeTab === 'visual' && (
             <VisualHub
               onNavigateToStudy={() => navigateTo('study')}
-              onNavigateToProductivity={() => navigateTo('productivity')}
+              onNavigateToProductivity={(taskId) => {
+                setFocusedTaskId(taskId || null);
+                navigateTo('productivity');
+              }}
             />
           )}
 
@@ -113,6 +123,7 @@ const AppContent: React.FC = () => {
           {!isModeSelectionOpen && activeTab === 'productivity' && (
             <ProductivityHub
               onNavigateToStudy={() => navigateTo('study')}
+              focusTaskId={focusedTaskId}
             />
           )}
         </div>

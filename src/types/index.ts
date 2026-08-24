@@ -20,6 +20,7 @@ export interface Task {
   steps: TaskStep[];
   sourceModule: 'manual' | 'visual_scanner' | 'study_coach';
   sourceReferenceId?: string;
+  sourceActionIndex?: number;
   createdAt: string;
 }
 
