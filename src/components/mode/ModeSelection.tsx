@@ -10,25 +10,25 @@ interface ModeSelectionProps {
 const modes = [
   {
     id: 'study' as const,
-    label: 'STUDY',
-    supportingText: 'Learn • Explain • Adapt',
-    detail: 'Build a study plan, learn concepts, and improve through adaptive quizzes.',
+    label: 'AI Study Coach',
+    supportingText: 'Learn • Practice • Adapt',
+    detail: 'Build momentum with focused study plans and adaptive practice.',
     icon: GraduationCap,
     accent: 'violet'
   },
   {
     id: 'visual' as const,
-    label: 'SEE & UNDERSTAND',
-    supportingText: 'Scan • Identify • Explain',
-    detail: 'Scan documents and turn what you see into clear next steps.',
+    label: 'AI Understand & Act',
+    supportingText: 'Scan • Understand • Act',
+    detail: 'Turn documents, notices, and images into clear next steps.',
     icon: Eye,
     accent: 'cyan'
   },
   {
     id: 'productivity' as const,
-    label: 'PRODUCTIVITY',
-    supportingText: 'Plan • Organize • Act',
-    detail: 'Prioritize tasks, break them down, and move them forward.',
+    label: 'AI Productivity',
+    supportingText: 'Plan • Prioritize • Execute',
+    detail: 'Keep your priorities, tasks, and schedule moving forward.',
     icon: Zap,
     accent: 'amber'
   }

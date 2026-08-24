@@ -1299,3 +1299,203 @@ a,
   .settings-live-mark > span,
   .settings-json { animation: none; }
 }
+
+
+/* Restored semantic ambient motifs for mode selection. These sit behind the
+   Lucide icons and animate only on hover, focus, and selection. */
+.mode-option-motif {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .76;
+  transition: opacity 220ms ease;
+}
+
+.mode-option:hover .mode-option-motif,
+.mode-option:focus-visible .mode-option-motif,
+.mode-option.is-selected .mode-option-motif {
+  opacity: 1;
+}
+
+.mode-option.is-muted .mode-option-motif {
+  opacity: .28;
+}
+
+/* Study: layered pages, notes, and quiet knowledge cues. */
+.mode-option-motif-study { color: #c8a4dc; }
+
+.motif-paper {
+  position: absolute;
+  left: 50%;
+  width: 68px;
+  height: 45px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  transform-origin: 50% 80%;
+}
+
+.motif-paper-back {
+  top: 27px;
+  opacity: .23;
+  transform: translateX(-50%) rotate(-8deg);
+  transition: transform 420ms var(--ease-out), opacity 220ms ease;
+}
+
+.motif-paper-front {
+  top: 33px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 10px;
+  opacity: .58;
+  transform: translateX(-50%) rotate(4deg);
+  transition: transform 420ms var(--ease-out), opacity 220ms ease;
+}
+
+.mode-option:hover .motif-paper-back,
+.mode-option:focus-visible .motif-paper-back,
+.mode-option.is-selected .motif-paper-back {
+  opacity: .38;
+  transform: translateX(-50%) rotate(-12deg) translate(-3px, -2px);
+}
+
+.mode-option:hover .motif-paper-front,
+.mode-option:focus-visible .motif-paper-front,
+.mode-option.is-selected .motif-paper-front {
+  opacity: .76;
+  transform: translateX(-50%) rotate(1deg) translate(2px, -3px);
+}
+
+.motif-paper-line {
+  display: block;
+  width: 34px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: .55;
+}
+
+.motif-paper-line-two { width: 43px; opacity: .34; }
+.motif-paper-line-three { width: 27px; opacity: .28; }
+.motif-paper-mark { position: absolute; right: 10px; bottom: 9px; width: 7px; height: 7px; border: 1px solid currentColor; border-radius: 2px; opacity: .68; }
+.motif-study-spark { position: absolute; width: 4px; height: 4px; border: 1px solid currentColor; border-radius: 50%; opacity: .56; transition: transform 360ms var(--ease-out), opacity 220ms ease; }
+.motif-study-spark-one { top: 41px; left: 24%; }
+.motif-study-spark-two { top: 70px; right: 22%; width: 3px; height: 3px; opacity: .35; }
+.mode-option:hover .motif-study-spark-one,
+.mode-option:focus-visible .motif-study-spark-one { opacity: .9; transform: translate(-3px, -3px); }
+.mode-option:hover .motif-study-spark-two,
+.mode-option:focus-visible .motif-study-spark-two { opacity: .68; transform: translate(3px, 2px); }
+
+/* See & Understand: a quiet focus frame with an on-demand recognition sweep. */
+.mode-option-motif-visual { color: #a8c875; }
+
+.motif-focus-ring {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  transition: transform 360ms var(--ease-out), opacity 240ms ease;
+}
+
+.motif-focus-ring-outer { width: 91px; height: 91px; opacity: .16; }
+.motif-focus-ring-inner { top: 33px; width: 69px; height: 69px; opacity: .27; }
+.motif-focus-frame { position: absolute; top: 24px; left: 50%; width: 90px; height: 67px; border: 1px solid currentColor; border-radius: 9px; opacity: .18; transform: translateX(-50%); }
+.motif-focus-frame::before,
+.motif-focus-frame::after { position: absolute; width: 12px; height: 12px; content: ''; }
+.motif-focus-frame::before { top: -1px; left: -1px; border-top: 2px solid currentColor; border-left: 2px solid currentColor; }
+.motif-focus-frame::after { right: -1px; bottom: -1px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; }
+.motif-scan-line { position: absolute; top: 57px; right: 27px; left: 27px; height: 1px; background: currentColor; box-shadow: 0 0 8px currentColor; opacity: 0; transform: translateY(-13px); }
+.motif-target-dot { position: absolute; top: 56px; left: 50%; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 12%, transparent); opacity: .5; transform: translate(-50%, -50%); transition: transform 280ms var(--ease-out), opacity 220ms ease; }
+
+.mode-option:hover .motif-focus-ring-outer,
+.mode-option:focus-visible .motif-focus-ring-outer,
+.mode-option.is-selected .motif-focus-ring-outer { opacity: .3; transform: translateX(-50%) scale(1.05); }
+.mode-option:hover .motif-focus-ring-inner,
+.mode-option:focus-visible .motif-focus-ring-inner,
+.mode-option.is-selected .motif-focus-ring-inner { opacity: .46; transform: translateX(-50%) scale(.94); }
+.mode-option:hover .motif-target-dot,
+.mode-option:focus-visible .motif-target-dot,
+.mode-option.is-selected .motif-target-dot { opacity: .9; transform: translate(-50%, -50%) scale(1.16); }
+.mode-option:hover .motif-scan-line,
+.mode-option:focus-visible .motif-scan-line { animation: motif-scan-pass 720ms var(--ease-out) both; }
+.mode-option.is-selected .motif-scan-line { animation: motif-scan-recognize 420ms var(--ease-out) both; }
+
+/* Productivity: a small stack moving toward a checked, organized state. */
+.mode-option-motif-productivity { color: #e2bd79; }
+
+.motif-task-card { position: absolute; left: 50%; width: 60px; height: 26px; border: 1px solid currentColor; border-radius: 5px; background: color-mix(in srgb, currentColor 7%, transparent); transition: transform 380ms var(--ease-out), opacity 220ms ease; }
+.motif-task-card-back { top: 20px; opacity: .22; transform: translateX(-50%) rotate(-7deg) translate(-7px, 3px); }
+.motif-task-card-middle { top: 28px; opacity: .34; transform: translateX(-50%) rotate(5deg) translate(5px, 1px); }
+.motif-task-card-front { top: 37px; opacity: .62; transform: translateX(-50%) rotate(-1deg); }
+.motif-task-check { position: absolute; top: 8px; left: 9px; width: 8px; height: 8px; border: 1px solid currentColor; border-radius: 2px; opacity: .7; }
+.motif-task-check::after { position: absolute; top: -1px; left: 2px; width: 3px; height: 6px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; content: ''; opacity: .8; transform: rotate(42deg); }
+.motif-action-check { position: absolute; top: 62px; left: calc(50% + 28px); width: 17px; height: 17px; border: 1px solid currentColor; border-radius: 50%; opacity: .58; transition: transform 360ms var(--ease-out), opacity 220ms ease; }
+.motif-action-check::after { position: absolute; top: 3px; left: 5px; width: 4px; height: 7px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; content: ''; transform: rotate(42deg); }
+.motif-connector { position: absolute; top: 67px; left: calc(50% - 28px); width: 50px; border-top: 1px dashed currentColor; opacity: .28; transform: rotate(-8deg); transform-origin: left center; transition: opacity 220ms ease, transform 360ms var(--ease-out); }
+
+.mode-option:hover .motif-task-card-back,
+.mode-option:focus-visible .motif-task-card-back,
+.mode-option.is-selected .motif-task-card-back { opacity: .34; transform: translateX(-50%) rotate(-11deg) translate(-11px, 1px); }
+.mode-option:hover .motif-task-card-middle,
+.mode-option:focus-visible .motif-task-card-middle,
+.mode-option.is-selected .motif-task-card-middle { opacity: .52; transform: translateX(-50%) rotate(7deg) translate(8px, -1px); }
+.mode-option:hover .motif-task-card-front,
+.mode-option:focus-visible .motif-task-card-front,
+.mode-option.is-selected .motif-task-card-front { opacity: .82; transform: translateX(-50%) rotate(0) translate(0, -3px); }
+.mode-option:hover .motif-action-check,
+.mode-option:focus-visible .motif-action-check,
+.mode-option.is-selected .motif-action-check { opacity: .92; transform: translate(3px, -2px) scale(1.08); }
+.mode-option:hover .motif-connector,
+.mode-option:focus-visible .motif-connector,
+.mode-option.is-selected .motif-connector { opacity: .56; transform: rotate(-4deg); }
+
+@keyframes motif-scan-pass {
+  0% { opacity: 0; transform: translateY(-15px); }
+  20% { opacity: .72; }
+  80% { opacity: .72; }
+  100% { opacity: 0; transform: translateY(17px); }
+}
+
+@keyframes motif-scan-recognize {
+  0% { opacity: 0; transform: translateY(-11px); }
+  35% { opacity: .9; }
+  100% { opacity: 0; transform: translateY(14px); }
+}
+
+@media (max-width: 390px) {
+  .mode-option-motif { top: 0; right: auto; bottom: 0; left: 0; width: 106px; opacity: .58; }
+  .mode-option-motif-study .motif-paper-front { transform: translateX(-50%) rotate(4deg) scale(.78); }
+  .mode-option-motif-study .motif-paper-back { transform: translateX(-50%) rotate(-8deg) scale(.78); }
+  .mode-option-motif-visual .motif-focus-ring-outer { transform: translateX(-50%) scale(.72); }
+  .mode-option-motif-visual .motif-focus-ring-inner { transform: translateX(-50%) scale(.68); }
+  .mode-option-motif-visual .motif-focus-frame { transform: translateX(-50%) scale(.7); }
+  .mode-option-motif-productivity .motif-task-card { transform: translateX(-50%) scale(.75); }
+  .mode-option-motif-productivity .motif-action-check { left: calc(50% + 20px); transform: scale(.78); }
+  .mode-option-motif-productivity .motif-connector { left: calc(50% - 22px); width: 38px; }
+  .mode-option:hover .mode-option-motif,
+  .mode-option:focus-visible .mode-option-motif,
+  .mode-option.is-selected .mode-option-motif { opacity: .82; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-option-motif,
+  .motif-paper,
+  .motif-study-spark,
+  .motif-focus-ring,
+  .motif-target-dot,
+  .motif-task-card,
+  .motif-action-check,
+  .motif-connector,
+  .motif-scan-line {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .mode-option:hover .motif-scan-line,
+  .mode-option:focus-visible .motif-scan-line,
+  .mode-option.is-selected .motif-scan-line { opacity: .38; transform: none; }
+}
