@@ -1,9 +1,9 @@
 # PROJECT_STATE.md — Live Team State & Work Tracking
 
 **Project**: Local AI Smartphone Assistant (L.A.S.A.)  
-**Status**: Phase 3 — Complete Prototype Verified, GitHub Repository Live, Deployment Ready  
+**Status**: Phase 3 — Refreshed UI, Dark/Light Themes, Swipe Gestures, Fully Integrated & Verified  
 **GitHub Repository**: [https://github.com/Kaustubh-Negi-01/L.A.S.A_System](https://github.com/Kaustubh-Negi-01/L.A.S.A_System)  
-**Last Updated**: 2026-08-24
+**Last Updated**: 2026-08-24 (Synced with commit `2d23f10` by Hamza)
 
 ---
 
@@ -16,7 +16,7 @@
 | **T0.3** | Shared Brain | Kaustubh | Implement `src/types/index.ts` from contract | **COMPLETED** | Strict typing verified |
 | **T0.4** | Shared Brain | Kaustubh | Implement `SharedContext.tsx` + LocalStorage store | **COMPLETED** | Multi-mode synchronization & persistence |
 | **T0.5** | AI Engine | Hamza | Implement `geminiService.ts` + Smart Mock Fallbacks | **COMPLETED** | Gemini 1.5 + Zero-Failure Mock engine |
-| **T1.1** | UI Shell | Santhosh | Build Smartphone frame, Status bar & Bottom navigation | **COMPLETED** | Futuristic cyber dark mobile shell |
+| **T1.1** | UI Shell | Santhosh | Build Smartphone frame, Status bar & Bottom navigation | **COMPLETED** | Added Dark/Light mode toggle, Touch swipe gestures |
 | **T1.2** | Understand & Act | Santhosh | Visual Scanner (Upload image/poster, presets) | **COMPLETED** | Multimodal OCR + Preset flyers |
 | **T1.3** | Understand & Act | Santhosh | Action Dispatcher (Auto-integrate across modes) | **COMPLETED** | `dispatchScanToApp` auto-adds to 3 modes |
 | **T2.1** | Study Coach | Kaustubh | Study Plan Generator UI & AI Pipeline | **COMPLETED** | Adaptive milestones & goal tracking |
@@ -30,8 +30,16 @@
 
 ---
 
-## 2. Live Links & Deployment Coordinates
+## 2. Recent Repository Changes (`2d23f10` by Hamza)
 
-* **GitHub Repo**: [https://github.com/Kaustubh-Negi-01/L.A.S.A_System](https://github.com/Kaustubh-Negi-01/L.A.S.A_System)
-* **Local Preview Server**: `http://localhost:3000/`
-* **Vercel Config**: `vercel.json` included with single-page application routing rules.
+1. **Light & Dark Mode Support**:
+   - Added theme toggle in header (`data-theme="dark"` / `data-theme="light"`) with localStorage persistence.
+2. **Gesture & Keyboard Navigation**:
+   - Added `1`, `2`, `3` keyboard shortcuts to jump directly between tabs.
+   - Added horizontal swipe gesture recognition on touch screens.
+3. **Smoother Transitions**:
+   - Added CSS view transition animations (`is-leaving` / `is-entering`).
+4. **AI Mode Parameterization**:
+   - Explicit `aiMode` support in all `geminiService.ts` calls for clean toggling between Live Gemini and Local Simulation.
+5. **Refined Typography & Tokens**:
+   - Streamlined modern typography (Inter + IBM Plex Mono) and adaptive contrast variables.
