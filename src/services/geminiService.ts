@@ -37,6 +37,32 @@ export interface AiConfig {
 
 const DEFAULT_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash';
+const AI_REQUEST_TIMEOUT_MS = 10000;
+
+function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<T>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(`${label} timed out after ${AI_REQUEST_TIMEOUT_MS / 1000}s`)), AI_REQUEST_TIMEOUT_MS);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+  });
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, label: string): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error(`${label} timed out after ${AI_REQUEST_TIMEOUT_MS / 1000}s`);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
 
 function trimBaseUrl(url: string): string {
   return url.trim().replace(/\/+$/, '');
@@ -95,11 +121,11 @@ export async function listAvailableModels(config: Omit<AiConfig, 'model' | 'mode
       .filter((model: AiModelOption) => Boolean(model.id));
   }
 
-  const response = await fetch('/api/ai-proxy', {
+  const response = await fetchWithTimeout('/api/ai-proxy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'models', baseUrl: config.baseUrl, apiKey: config.apiKey })
-  });
+  }, 'Model discovery');
   if (!response.ok) throw new Error(`Model discovery failed (${response.status})`);
   return mapModelOptions(await response.json());
 }
@@ -119,7 +145,7 @@ async function generateText(config: AiConfig, prompt: string, imagePart?: Gemini
   if (config.provider === 'gemini') {
     const genAI = new GoogleGenerativeAI(config.apiKey);
     const model = genAI.getGenerativeModel({ model: config.model.replace(/^models\//, '') });
-    const result = await model.generateContent(imagePart ? [prompt, imagePart] : prompt);
+    const result = await withTimeout(model.generateContent(imagePart ? [prompt, imagePart] : prompt), 'Gemini request');
     return result.response.text();
   }
 
@@ -129,7 +155,7 @@ async function generateText(config: AiConfig, prompt: string, imagePart?: Gemini
         { type: 'image_url', image_url: { url: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}` } }
       ]
     : prompt;
-  const response = await fetch('/api/ai-proxy', {
+  const response = await fetchWithTimeout('/api/ai-proxy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -138,7 +164,7 @@ async function generateText(config: AiConfig, prompt: string, imagePart?: Gemini
       apiKey: config.apiKey,
       payload: { model: config.model, messages: [{ role: 'user', content: userContent } satisfies ChatMessage], temperature: 0.2 }
     })
-  });
+  }, 'AI request');
   if (!response.ok) throw new Error(`AI request failed (${response.status})`);
   const text = extractChatText(await response.json());
   if (!text) throw new Error('AI provider returned no message content');

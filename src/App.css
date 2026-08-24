@@ -263,6 +263,29 @@
 .nav-count { position: absolute; top: -6px; right: -9px; min-width: 13px; padding: 2px 3px; border: 1px solid var(--danger); border-radius: var(--radius-full); background: var(--surface); color: var(--danger); font-size: 7px; font-weight: 800; line-height: 1; text-align: center; }
 .nav-active-pill { position: absolute; right: 50%; bottom: 2px; width: 16px; height: 2px; border-radius: var(--radius-full); background: var(--accent); transform: translateX(50%); }
 
+.nav-current-mode {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 136px;
+  min-height: 46px;
+  margin: 0 auto;
+  padding: 6px 20px 8px;
+  border: 1px solid rgba(168, 200, 117, 0.28);
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.nav-current-mode .nav-icon-wrap { width: 22px; }
+.nav-current-mode .nav-icon { color: var(--accent); }
+.nav-current-mode .nav-copy { gap: 2px; }
+.nav-current-mode .nav-copy strong { color: inherit; font-size: 10px; }
+.nav-current-mode .nav-copy small { display: block; color: var(--text-dim); font-size: 8px; line-height: 1.1; }
+.nav-current-mode .nav-index { display: block; color: var(--text-dim); font-size: 8px; }
+.nav-current-mode .nav-active-pill { bottom: 1px; }
+
 .card-header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .card-title { display: flex; align-items: center; gap: 7px; color: var(--text); font-family: var(--font-heading); font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
 .badge { border: 1px solid transparent; border-radius: 4px; font-size: 8px; font-weight: 800; letter-spacing: 0.06em; padding: 3px 6px; text-transform: uppercase; white-space: nowrap; }
@@ -1066,7 +1089,8 @@ a,
 .switch-mode-action,
 .task-filter-btn,
 .nav-tab-btn,
-.task-complete-control,
+  .nav-current-mode,
+  .task-complete-control,
 .task-step-row {
   -webkit-tap-highlight-color: transparent;
   transition: transform 150ms var(--ease-out), opacity 150ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease;
@@ -1079,7 +1103,8 @@ a,
 .switch-mode-action:active,
 .task-filter-btn:active,
 .nav-tab-btn:active,
-.task-complete-control:active,
+  .nav-current-mode:active,
+  .task-complete-control:active,
 .task-step-row:active {
   opacity: .86;
   transform: translateY(1px) scale(.965);

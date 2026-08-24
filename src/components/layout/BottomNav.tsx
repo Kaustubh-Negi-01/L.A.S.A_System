@@ -3,7 +3,7 @@ import { Eye, GraduationCap, Zap } from 'lucide-react';
 
 interface BottomNavProps {
   activeTab: 'visual' | 'study' | 'productivity';
-  setActiveTab: (tab: 'visual' | 'study' | 'productivity') => void;
+  setActiveTab?: (tab: 'visual' | 'study' | 'productivity') => void;
   unreadTasksCount?: number;
 }
 
@@ -13,39 +13,29 @@ const navItems = [
   { id: 'productivity' as const, label: 'Productivity', caption: 'Tasks & schedule', icon: Zap }
 ];
 
-export const BottomNav: React.FC<BottomNavProps> = ({
-  activeTab,
-  setActiveTab,
-  unreadTasksCount = 0
-}) => {
+export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, unreadTasksCount = 0 }) => {
+  const activeItem = navItems.find(item => item.id === activeTab) || navItems[0];
+  const ActiveIcon = activeItem.icon;
+  const activeIndex = navItems.findIndex(item => item.id === activeItem.id);
+
   return (
-    <nav className="bottom-nav-bar" aria-label="Primary workspace navigation">
-      {navItems.map(({ id, label, caption, icon: Icon }, index) => {
-        const isActive = activeTab === id;
-        return (
-          <button
-            key={id}
-            className={`nav-tab-btn ${isActive ? 'active' : ''}`}
-            onClick={() => setActiveTab(id)}
-            aria-current={isActive ? 'page' : undefined}
-          >
-            <span className="nav-icon-wrap">
-              <Icon className="nav-icon" size={18} />
-              {id === 'productivity' && unreadTasksCount > 0 && (
-                <span className="nav-count" aria-label={`${unreadTasksCount} open tasks`}>
-                  {unreadTasksCount}
-                </span>
-              )}
+    <nav className="bottom-nav-bar" aria-label="Current workspace">
+      <div className="nav-current-mode" aria-current="page">
+        <span className="nav-icon-wrap">
+          <ActiveIcon className="nav-icon" size={18} aria-hidden="true" />
+          {activeItem.id === 'productivity' && unreadTasksCount > 0 && (
+            <span className="nav-count" aria-label={`${unreadTasksCount} open tasks`}>
+              {unreadTasksCount}
             </span>
-            <span className="nav-copy">
-              <strong>{label}</strong>
-              <small>{caption}</small>
-            </span>
-            <span className="nav-index">0{index + 1}</span>
-            {isActive && <span className="nav-active-pill" />}
-          </button>
-        );
-      })}
+          )}
+        </span>
+        <span className="nav-copy">
+          <strong>{activeItem.label}</strong>
+          <small>{activeItem.caption}</small>
+        </span>
+        <span className="nav-index">0{activeIndex + 1}</span>
+        <span className="nav-active-pill" aria-hidden="true" />
+      </div>
     </nav>
   );
 };
