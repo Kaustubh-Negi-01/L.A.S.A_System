@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Camera, FileText, Sparkles, Loader2, CheckCircle, Video, XCircle, RefreshCw } from 'lucide-react';
 import { useSharedContext } from '../../context/SharedContext';
-import { extractVisualInsights } from '../../services/geminiService';
+import { extractVisualInsights, extractVisualInsightsFromText } from '../../services/geminiService';
 import { sampleImagePresets, generateMockVisualInsights } from '../../services/mockData';
 import { VisualScanResult } from '../../types';
 
@@ -109,7 +109,10 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
 
       if (activePreset) {
         const presetObj = sampleImagePresets.find(p => p.id === activePreset);
-        scanResult = generateMockVisualInsights(presetObj?.imagePromptText);
+        const liveConfig = getAiConfig();
+        scanResult = liveConfig.apiKey && presetObj?.imagePromptText
+          ? await extractVisualInsightsFromText(presetObj.imagePromptText, liveConfig)
+          : generateMockVisualInsights(presetObj?.imagePromptText);
       } else if (selectedImage) {
         scanResult = await extractVisualInsights(selectedImage, mimeType, getAiConfig());
       } else {

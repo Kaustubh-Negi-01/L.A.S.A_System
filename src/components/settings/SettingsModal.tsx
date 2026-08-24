@@ -221,7 +221,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <button className="btn-secondary settings-discover-button" type="button" onClick={handleDiscoverModels} disabled={connectionState === 'loading'}><Search size={13} /> Discover</button>
           </div>
           <div className="settings-model-actions"><button className="btn-secondary settings-test-button" type="button" onClick={handleTestConnection} disabled={connectionState === 'loading' || !inputKey.trim() && !(inputProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY)}><PlugZap size={13} /> Test connection</button>{connectionMessage && <span className={`settings-connection-message ${connectionState}`}>{connectionMessage}</span>}</div>
-          <span className="settings-field-hint">The selected model is used across visual understanding, study planning, quizzes, explanations, task breakdown, and next-action recommendations.</span>
+          <span className="settings-field-hint">The selected model is used across visual understanding, study planning, quizzes, explanations, task breakdown, and next-action recommendations. For image uploads, choose a model that advertises vision or multimodal support; text-only models use a safe extraction fallback.</span>
         </div>
 
         <div className="settings-section">

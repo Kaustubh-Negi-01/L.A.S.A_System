@@ -239,6 +239,51 @@ Return strictly a valid JSON object matching this TypeScript interface without m
   }
 }
 
+// Sample presets in the prototype contain representative OCR text rather than a binary image.
+// Route that text through the selected provider so live mode still exercises the AI pipeline.
+export async function extractVisualInsightsFromText(sourceText: string, config?: AiConfig): Promise<VisualScanResult> {
+  const activeConfig = config ?? getAiConfig();
+  if (!activeConfig.apiKey) return generateMockVisualInsights(sourceText);
+
+  try {
+    const prompt = `You are L.A.S.A. Understand & Act.
+Interpret the following OCR text from a notice, poster, timetable, or syllabus and return only valid JSON matching this schema:
+{
+  "title": string,
+  "summary": string,
+  "extractedDates": string[],
+  "extractedEvents": [{ "id": string, "title": string, "date": string, "time": string, "location": string, "category": "exam" | "assignment" | "workshop" | "competition" | "general", "description": string, "actionSuggested": string[] }],
+  "actionItems": string[]
+}
+
+OCR text:
+${sourceText}`;
+    const parsed = JSON.parse(cleanJsonResponse(await generateText(activeConfig, prompt)));
+    return {
+      id: `scan-${Date.now()}`,
+      title: parsed.title || 'Extracted Document',
+      summary: parsed.summary || 'Text interpreted successfully.',
+      extractedDates: Array.isArray(parsed.extractedDates) ? parsed.extractedDates : [],
+      extractedEvents: (Array.isArray(parsed.extractedEvents) ? parsed.extractedEvents : []).map((event: any, idx: number) => ({
+        id: `evt-${Date.now()}-${idx}`,
+        title: event.title || 'Extracted Event',
+        date: event.date || new Date().toISOString().split('T')[0],
+        time: event.time || '',
+        location: event.location || '',
+        category: event.category || 'general',
+        description: event.description || '',
+        actionSuggested: Array.isArray(event.actionSuggested) ? event.actionSuggested : ['Add to Calendar']
+      })),
+      actionItems: Array.isArray(parsed.actionItems) ? parsed.actionItems : ['Review document'],
+      rawText: sourceText,
+      scannedAt: new Date().toISOString()
+    };
+  } catch (error) {
+    console.warn('Live preset extraction failed, using mock fallback:', error);
+    return generateMockVisualInsights(sourceText);
+  }
+}
+
 // --- 2. Adaptive Study Plan Generator ---
 export async function generateStudyPlan(
   req: StudyPlanRequest,
