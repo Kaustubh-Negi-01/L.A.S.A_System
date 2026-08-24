@@ -11,8 +11,6 @@ interface SettingsModalProps {
 }
 
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
-const ONETAP_BASE_URL = 'https://onetap-gateway-7742.netlify.app/api/v1';
-
 const providerLabels: Record<AiProvider, string> = {
   gemini: 'Google Gemini',
   'openai-compatible': 'OpenAI-compatible gateway'
@@ -55,7 +53,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     if (!isOpen) return;
     setInputKey(customApiKey);
     setInputProvider(aiProvider);
-    setInputBaseUrl(aiBaseUrl || (aiProvider === 'gemini' ? GEMINI_BASE_URL : ONETAP_BASE_URL));
+    setInputBaseUrl(aiBaseUrl || (aiProvider === 'gemini' ? GEMINI_BASE_URL : ''));
     setInputModel(aiModel || (aiProvider === 'gemini' ? 'gemini-1.5-flash' : 'onetap-1'));
     setConnectionState('idle');
     setConnectionMessage('');
@@ -99,8 +97,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
       setInputBaseUrl(GEMINI_BASE_URL);
       setInputModel('gemini-1.5-flash');
     } else {
-      setInputBaseUrl(ONETAP_BASE_URL);
-      setInputModel('onetap-1');
+      setInputBaseUrl('');
+      setInputModel('');
     }
   };
 
@@ -203,7 +201,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
           {inputProvider === 'openai-compatible' && <>
             <label className="settings-field-label" htmlFor="settings-base-url">Base URL</label>
-            <input id="settings-base-url" type="url" placeholder={ONETAP_BASE_URL} value={inputBaseUrl} onChange={event => setInputBaseUrl(event.target.value)} />
+            <input id="settings-base-url" type="url" placeholder="https://your-provider.example/v1" value={inputBaseUrl} onChange={event => setInputBaseUrl(event.target.value)} />
           </>}
 
           <label className="settings-field-label" htmlFor="settings-api-key">API key</label>
