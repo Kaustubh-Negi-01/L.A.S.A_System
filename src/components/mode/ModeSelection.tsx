@@ -1,4 +1,5 @@
-import { ArrowRight, Eye, GraduationCap, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, Check, Eye, GraduationCap, Zap } from 'lucide-react';
 
 export type AppTab = 'visual' | 'study' | 'productivity';
 
@@ -33,12 +34,24 @@ const modes = [
   }
 ];
 
-export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelectMode }) => (
+export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelectMode }) => {
+  const [selectedMode, setSelectedMode] = useState<AppTab | null>(null);
+
+  const handleSelectMode = (mode: AppTab) => {
+    if (selectedMode) return;
+    setSelectedMode(mode);
+    window.setTimeout(() => onSelectMode(mode), 220);
+  };
+
+  return (
   <section className="mode-selection" aria-labelledby="mode-selection-title">
     <div className="mode-selection-intro">
       <span className="mode-selection-eyebrow">L.A.S.A. / STARTUP</span>
       <h1 id="mode-selection-title">What mode do you want to use?</h1>
       <p>Choose an assistant built around what you want to accomplish right now.</p>
+      <span className="mode-selection-status" aria-live="polite">
+        {selectedMode ? `Opening ${modes.find(mode => mode.id === selectedMode)?.label ?? 'workspace'}…` : 'Select a mode to continue'}
+      </span>
     </div>
 
     <div className="mode-selection-grid">
@@ -46,17 +59,21 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelectMode }) =>
         <button
           key={id}
           type="button"
-          className={`mode-option mode-option-${accent}`}
-          onClick={() => onSelectMode(id)}
+          className={`mode-option mode-option-${accent} ${selectedMode === id ? 'is-selected' : ''} ${selectedMode && selectedMode !== id ? 'is-muted' : ''}`}
+          onClick={() => handleSelectMode(id)}
+          aria-pressed={selectedMode === id}
         >
           <span className="mode-option-orbit" aria-hidden="true" />
           <span className="mode-option-icon"><Icon size={27} strokeWidth={1.8} /></span>
           <span className="mode-option-label">{label}</span>
           <span className="mode-option-supporting">{supportingText}</span>
           <span className="mode-option-detail">{detail}</span>
-          <span className="mode-option-action">Enter mode <ArrowRight size={14} /></span>
+          <span className="mode-option-action">
+            {selectedMode === id ? <><Check size={13} /> Opening</> : <>Enter mode <ArrowRight size={14} /></>}
+          </span>
         </button>
       ))}
     </div>
   </section>
-);
+  );
+};

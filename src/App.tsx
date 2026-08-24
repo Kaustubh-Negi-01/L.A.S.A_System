@@ -79,7 +79,7 @@ const AppContent: React.FC = () => {
           />
         }
       >
-        <div className={`screen-view ${isTransitioning ? 'is-leaving' : 'is-entering'}`} key={activeTab}>
+        <div className={`screen-view ${isTransitioning ? 'is-leaving' : 'is-entering'}`} key={isModeSelectionOpen ? 'mode-selection' : activeTab}>
           {isModeSelectionOpen && <ModeSelection onSelectMode={navigateTo} />}
 
           {!isModeSelectionOpen && activeTab === 'visual' && (

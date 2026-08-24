@@ -492,3 +492,192 @@
     transition: none;
   }
 }
+
+/* Product motion layer */
+.mode-selection-status {
+  display: block;
+  margin-top: 14px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: color 180ms ease;
+}
+
+.mode-option {
+  will-change: transform, opacity;
+}
+
+.mode-option.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, .28), 0 0 0 3px var(--accent-soft);
+}
+
+.mode-option.is-muted {
+  opacity: .42;
+  transform: scale(.97);
+  pointer-events: none;
+}
+
+.reset-feedback {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  animation: feedback-in 260ms var(--ease-out) both;
+}
+
+.reset-button.is-resetting svg {
+  animation: lasa-spin 560ms cubic-bezier(.22, .8, .24, 1) both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .phone-frame {
+    animation: phone-boot 520ms var(--ease-out) both;
+  }
+
+  .app-header {
+    animation: header-in 380ms var(--ease-out) 80ms both;
+  }
+
+  .section-intro {
+    animation: section-in 400ms var(--ease-out) 130ms both;
+  }
+
+  .mode-selection-intro {
+    animation: selection-intro-in 500ms var(--ease-out) 140ms both;
+  }
+
+  .mode-selection-grid {
+    animation: selection-grid-in 420ms var(--ease-out) 220ms both;
+  }
+
+  .mode-option {
+    animation: mode-card-in 520ms var(--ease-out) both;
+  }
+
+  .mode-option:nth-child(1) { animation-delay: 260ms; }
+  .mode-option:nth-child(2) { animation-delay: 320ms; }
+  .mode-option:nth-child(3) { animation-delay: 380ms; }
+
+  .mode-option-icon {
+    transition: transform 220ms var(--ease-out), background-color 220ms ease, box-shadow 220ms ease;
+  }
+
+  .mode-option:hover .mode-option-icon,
+  .mode-option:focus-visible .mode-option-icon {
+    transform: translateY(-3px) rotate(-4deg) scale(1.04);
+  }
+
+  .mode-option.is-selected .mode-option-icon {
+    animation: mode-icon-confirm 520ms var(--ease-out) both;
+  }
+
+  .screen-view .glass-panel {
+    animation: content-card-in 360ms var(--ease-out) 100ms both;
+  }
+
+  .screen-view .glass-panel:nth-child(2) { animation-delay: 145ms; }
+  .screen-view .glass-panel:nth-child(3) { animation-delay: 190ms; }
+  .screen-view .glass-panel:nth-child(4) { animation-delay: 235ms; }
+  .screen-view .glass-panel:nth-child(5) { animation-delay: 280ms; }
+
+  .nav-tab-btn {
+    animation: nav-item-in 300ms var(--ease-out) 180ms both;
+  }
+
+  .nav-tab-btn:nth-child(2) { animation-delay: 220ms; }
+  .nav-tab-btn:nth-child(3) { animation-delay: 260ms; }
+
+  .nav-tab-btn.active .nav-icon {
+    animation: nav-icon-pop 260ms var(--ease-out) both;
+  }
+
+  .task-complete-control,
+  .task-step-row,
+  .btn-primary,
+  .btn-secondary,
+  .btn-purple,
+  .icon-btn,
+  .task-filter-btn,
+  .switch-mode-action {
+    transition: transform 150ms var(--ease-out), background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+
+  .task-complete-control:active,
+  .task-step-row:active,
+  .btn-primary:active,
+  .btn-secondary:active,
+  .btn-purple:active,
+  .icon-btn:active,
+  .task-filter-btn:active,
+  .switch-mode-action:active {
+    transform: scale(.96);
+  }
+}
+
+@keyframes phone-boot {
+  from { opacity: 0; transform: translateY(10px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes header-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes section-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes selection-intro-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes selection-grid-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mode-card-in {
+  from { opacity: 0; transform: translateY(12px) scale(.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes mode-icon-confirm {
+  0% { transform: scale(1); }
+  55% { transform: scale(1.12) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes content-card-in {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nav-item-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nav-icon-pop {
+  0% { transform: scale(1); }
+  55% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes feedback-in {
+  from { opacity: 0; transform: translateX(4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes lasa-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

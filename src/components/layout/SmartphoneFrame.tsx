@@ -45,6 +45,7 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   const { customApiKey, aiMode, resetToDemoData } = useSharedContext();
   const [currentTime, setCurrentTime] = useState<string>('09:41');
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [isResetting, setIsResetting] = useState(false);
   const copy = sectionCopy[activeTab];
   const isLive = aiMode === 'gemini' && Boolean(customApiKey || import.meta.env.VITE_GEMINI_API_KEY);
 
@@ -52,6 +53,12 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('lasa-theme', theme);
   }, [theme]);
+
+  const handleReset = () => {
+    setIsResetting(true);
+    resetToDemoData();
+    window.setTimeout(() => setIsResetting(false), 700);
+  };
 
   useEffect(() => {
     const update = () => {
@@ -101,9 +108,10 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
             >
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             </button>
-            <button className="icon-btn" onClick={resetToDemoData} title="Reset demo data" aria-label="Reset demo data">
+            <button className={`icon-btn reset-button ${isResetting ? 'is-resetting' : ''}`} onClick={handleReset} title="Reset demo data" aria-label="Reset demo data" aria-busy={isResetting}>
               <RotateCcw size={14} />
             </button>
+            {isResetting && <span className="reset-feedback" role="status" aria-live="polite">Demo reset</span>}
             <button className="icon-btn" onClick={onOpenSettings} title="Open assistant settings" aria-label="Open assistant settings">
               <SettingsIcon size={15} />
             </button>
