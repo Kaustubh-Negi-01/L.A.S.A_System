@@ -8,7 +8,7 @@ interface StudyPlanGeneratorProps {
 }
 
 export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCreated }) => {
-  const { addStudyPlan, customApiKey, aiMode } = useSharedContext();
+  const { addStudyPlan, getAiConfig } = useSharedContext();
   const [subject, setSubject] = useState('');
   const [examDate, setExamDate] = useState(() => {
     const d = new Date(Date.now() + 86400000 * 4);
@@ -45,8 +45,7 @@ export const StudyPlanGenerator: React.FC<StudyPlanGeneratorProps> = ({ onPlanCr
           goal: goal.trim(),
           knownWeaknesses: weaknesses
         },
-        customApiKey,
-        aiMode
+        getAiConfig()
       );
 
       addStudyPlan(newPlan);

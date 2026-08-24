@@ -16,7 +16,7 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ onExecuteAction 
   const fetchRecommendation = async () => {
     setLoading(true);
     try {
-      const rec = await recommendNextAction(state, state.customApiKey, state.aiMode);
+      const rec = await recommendNextAction(state, state.getAiConfig());
       setRecommendation(rec);
     } catch (err) {
       console.error('Failed to get recommendation:', err);
@@ -34,7 +34,10 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ onExecuteAction 
     state.quizHistory,
     state.activeStudyPlanId,
     state.customApiKey,
-    state.aiMode
+    state.aiMode,
+    state.aiProvider,
+    state.aiBaseUrl,
+    state.aiModel
   ]);
 
   if (loading) {

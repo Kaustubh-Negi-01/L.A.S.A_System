@@ -19,38 +19,10 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
   onClose,
   onLaunchQuiz
 }) => {
-  const { customApiKey, aiMode } = useSharedContext();
+  const { getAiConfig } = useSharedContext();
   const [data, setData] = useState<ConceptExplanation | null>(null);
   const [loading, setLoading] = useState(true);
   const [showQuickAnswer, setShowQuickAnswer] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const [shouldRender, setShouldRender] = useState(isOpen);
-
-  useEffect(() => {
-    if (isOpen) {
-      setShouldRender(true);
-      setIsClosing(false);
-      return;
-    }
-
-    if (!shouldRender) return;
-    setIsClosing(true);
-    const timeoutId = window.setTimeout(() => {
-      setShouldRender(false);
-      setIsClosing(false);
-    }, 180);
-    return () => window.clearTimeout(timeoutId);
-  }, [isOpen, shouldRender]);
-
-  const closeWithMotion = (afterClose: () => void = onClose) => {
-    if (isClosing) return;
-    setIsClosing(true);
-    window.setTimeout(() => {
-      setShouldRender(false);
-      setIsClosing(false);
-      afterClose();
-    }, 180);
-  };
 
   useEffect(() => {
     if (!isOpen || !topic) return;
@@ -60,7 +32,7 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
       setLoading(true);
       setShowQuickAnswer(false);
       try {
-        const result = await explainConcept(topic, subject, customApiKey, aiMode);
+        const result = await explainConcept(topic, subject, getAiConfig());
         if (isMounted) setData(result);
       } catch (err) {
         console.error('Failed to explain concept:', err);
@@ -73,12 +45,12 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [topic, subject, isOpen, customApiKey, aiMode]);
+  }, [topic, subject, isOpen, getAiConfig]);
 
-  if (!shouldRender) return null;
+  if (!isOpen) return null;
 
   return (
-    <div className={`modal-backdrop ${isClosing ? 'is-closing' : ''}`} onClick={() => closeWithMotion()}>
+    <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '90%' }}>
         <div className="modal-handle" />
 
@@ -87,7 +59,7 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
             <Lightbulb size={18} color="#00f0ff" />
             <span>AI Concept Explainer</span>
           </div>
-          <button className="icon-btn" onClick={() => closeWithMotion()} aria-label="Close concept explainer">
+          <button className="icon-btn" onClick={onClose} aria-label="Close">
             <X size={16} />
           </button>
         </div>
@@ -210,7 +182,10 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
             {/* Action Button: Test with Quiz */}
             <button
               className="btn-primary"
-              onClick={() => closeWithMotion(() => onLaunchQuiz(topic))}
+              onClick={() => {
+                onClose();
+                onLaunchQuiz(topic);
+              }}
               style={{ width: '100%', padding: '12px', fontSize: '13px' }}
             >
               <PlayCircle size={16} />

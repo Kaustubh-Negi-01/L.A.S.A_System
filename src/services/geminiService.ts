@@ -10,6 +10,8 @@ import {
   TaskStep,
   SharedAppState,
   NextActionRecommendation,
+  AiProvider,
+  AiModelOption,
 } from '../types';
 import {
   generateMockVisualInsights,
@@ -21,16 +23,132 @@ import {
   generateMockNextAction
 } from './mockData';
 
-// Helper to get active API key
+// Provider-neutral AI configuration. The browser prototype supports Gemini and
+// OpenAI-compatible gateways (including custom base URLs such as OneTap).
 export type AiMode = 'gemini' | 'simulation';
 
-export function getActiveApiKey(customKey?: string, mode: AiMode = 'gemini'): string {
+export interface AiConfig {
+  apiKey: string;
+  mode: AiMode;
+  provider: AiProvider;
+  baseUrl: string;
+  model: string;
+}
+
+const DEFAULT_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
+const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash';
+
+function trimBaseUrl(url: string): string {
+  return url.trim().replace(/\/+$/, '');
+}
+
+export function getActiveApiKey(customKey?: string, mode: AiMode = 'gemini', provider: AiProvider = 'gemini'): string {
   if (mode === 'simulation') return '';
-  if (customKey && customKey.trim().length > 10) {
-    return customKey.trim();
-  }
+  if (customKey && customKey.trim().length > 10) return customKey.trim();
+  if (provider !== 'gemini') return '';
   const envKey = import.meta.env.VITE_GEMINI_API_KEY;
   return (typeof envKey === 'string' && envKey.trim().length > 10) ? envKey.trim() : '';
+}
+
+export function getAiConfig(
+  customKey?: string,
+  mode: AiMode = 'gemini',
+  provider: AiProvider = 'gemini',
+  baseUrl: string = DEFAULT_GEMINI_BASE_URL,
+  model: string = DEFAULT_GEMINI_MODEL
+): AiConfig {
+  const apiKey = getActiveApiKey(customKey, mode, provider);
+  return {
+    apiKey,
+    mode,
+    provider,
+    baseUrl: trimBaseUrl(baseUrl || (provider === 'gemini' ? DEFAULT_GEMINI_BASE_URL : '')),
+    model: model.trim() || (provider === 'gemini' ? DEFAULT_GEMINI_MODEL : 'onetap-1')
+  };
+}
+
+function mapModelOptions(payload: any): AiModelOption[] {
+  const data = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload?.models) ? payload.models : [];
+  return data
+    .map((model: any) => {
+      const rawId = String(model?.id || model?.name || '').replace(/^models\//, '').trim();
+      if (!rawId) return null;
+      return { id: rawId, label: rawId, ownedBy: model?.owned_by || model?.publisher };
+    })
+    .filter(Boolean) as AiModelOption[];
+}
+
+export async function listAvailableModels(config: Omit<AiConfig, 'model' | 'mode'> & { mode?: AiMode }): Promise<AiModelOption[]> {
+  if (!config.apiKey || config.mode === 'simulation') return [];
+  if (config.provider === 'gemini') {
+    const response = await fetch(`${trimBaseUrl(config.baseUrl || DEFAULT_GEMINI_BASE_URL)}/models?key=${encodeURIComponent(config.apiKey)}`);
+    if (!response.ok) throw new Error(`Gemini model discovery failed (${response.status})`);
+    const payload = await response.json();
+    const models = Array.isArray(payload?.models) ? payload.models : [];
+    return models
+      .filter((model: any) => !Array.isArray(model?.supportedGenerationMethods) || model.supportedGenerationMethods.includes('generateContent'))
+      .map((model: any) => ({
+        id: String(model?.name || '').replace(/^models\//, '').trim(),
+        label: String(model?.displayName || model?.name || '').replace(/^models\//, '').trim(),
+        ownedBy: 'Google'
+      }))
+      .filter((model: AiModelOption) => Boolean(model.id));
+  }
+
+  const response = await fetch('/api/ai-proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'models', baseUrl: config.baseUrl, apiKey: config.apiKey })
+  });
+  if (!response.ok) throw new Error(`Model discovery failed (${response.status})`);
+  return mapModelOptions(await response.json());
+}
+
+function extractChatText(payload: any): string {
+  const content = payload?.choices?.[0]?.message?.content;
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) return content.map((part: any) => part?.text || '').join('');
+  return '';
+}
+
+type GeminiImagePart = { inlineData: { data: string; mimeType: string } };
+
+type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> };
+
+async function generateText(config: AiConfig, prompt: string, imagePart?: GeminiImagePart): Promise<string> {
+  if (config.provider === 'gemini') {
+    const genAI = new GoogleGenerativeAI(config.apiKey);
+    const model = genAI.getGenerativeModel({ model: config.model.replace(/^models\//, '') });
+    const result = await model.generateContent(imagePart ? [prompt, imagePart] : prompt);
+    return result.response.text();
+  }
+
+  const userContent = imagePart
+    ? [
+        { type: 'text', text: prompt },
+        { type: 'image_url', image_url: { url: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}` } }
+      ]
+    : prompt;
+  const response = await fetch('/api/ai-proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'chat',
+      baseUrl: config.baseUrl,
+      apiKey: config.apiKey,
+      payload: { model: config.model, messages: [{ role: 'user', content: userContent } satisfies ChatMessage], temperature: 0.2 }
+    })
+  });
+  if (!response.ok) throw new Error(`AI request failed (${response.status})`);
+  const text = extractChatText(await response.json());
+  if (!text) throw new Error('AI provider returned no message content');
+  return text;
+}
+
+export async function testAiConnection(config: AiConfig): Promise<string> {
+  if (!config.apiKey || config.mode === 'simulation') throw new Error('Add an API key and choose a live provider first.');
+  const response = await generateText(config, 'Reply with exactly OK.');
+  return response.trim();
 }
 
 // Robust Clean JSON response from Gemini code blocks or conversational wrappers
@@ -51,10 +169,10 @@ function cleanJsonResponse(text: string): string {
 export async function extractVisualInsights(
   imageBase64: string,
   mimeType: string,
-  customApiKey?: string,
-  aiMode: AiMode = 'gemini'
+  config?: AiConfig
 ): Promise<VisualScanResult> {
-  const apiKey = getActiveApiKey(customApiKey, aiMode);
+  const activeConfig = config ?? getAiConfig();
+  const apiKey = activeConfig.apiKey;
   
   if (!apiKey) {
     console.info('Using Mock Failover for Visual Insights (No API Key)');
@@ -62,9 +180,6 @@ export async function extractVisualInsights(
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `You are an on-device Smartphone Visual Assistant (L.A.S.A.).
 Analyze this uploaded image (which may be a class notice, exam circular, event poster, syllabus, or handwritten note).
 Extract all actionable events, deadlines, titles, dates, and suggested next steps.
@@ -96,8 +211,7 @@ Return strictly a valid JSON object matching this TypeScript interface without m
       }
     };
 
-    const result = await model.generateContent([prompt, imagePart]);
-    const responseText = cleanJsonResponse(result.response.text());
+    const responseText = cleanJsonResponse(await generateText(activeConfig, prompt, imagePart));
     const parsed = JSON.parse(responseText);
 
     return {
@@ -128,10 +242,10 @@ Return strictly a valid JSON object matching this TypeScript interface without m
 // --- 2. Adaptive Study Plan Generator ---
 export async function generateStudyPlan(
   req: StudyPlanRequest,
-  customApiKey?: string,
-  aiMode: AiMode = 'gemini'
+  config?: AiConfig
 ): Promise<StudyPlan> {
-  const apiKey = getActiveApiKey(customApiKey, aiMode);
+  const activeConfig = config ?? getAiConfig();
+  const apiKey = activeConfig.apiKey;
 
   if (!apiKey) {
     console.info('Using Mock Failover for Study Plan');
@@ -139,9 +253,6 @@ export async function generateStudyPlan(
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `You are L.A.S.A. AI Study Coach.
 Create an adaptive, high-impact study plan for a student.
 Subject: "${req.subject}"
@@ -169,8 +280,7 @@ Return strictly a valid JSON object matching this structure:
   ]
 }`;
 
-    const result = await model.generateContent(prompt);
-    const responseText = cleanJsonResponse(result.response.text());
+    const responseText = cleanJsonResponse(await generateText(activeConfig, prompt));
     const parsed = JSON.parse(responseText);
 
     return {
@@ -200,10 +310,10 @@ Return strictly a valid JSON object matching this structure:
 // --- 3. Dynamic Quiz Generator ---
 export async function generateQuiz(
   req: QuizRequest,
-  customApiKey?: string,
-  aiMode: AiMode = 'gemini'
+  config?: AiConfig
 ): Promise<QuizQuestion[]> {
-  const apiKey = getActiveApiKey(customApiKey, aiMode);
+  const activeConfig = config ?? getAiConfig();
+  const apiKey = activeConfig.apiKey;
 
   if (!apiKey) {
     console.info('Using Mock Failover for Quiz Generation');
@@ -211,9 +321,6 @@ export async function generateQuiz(
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `You are L.A.S.A. AI Exam Evaluator.
 Generate ${req.questionCount || 3} challenging multiple-choice questions for:
 Subject: "${req.subject}"
@@ -232,8 +339,7 @@ Return strictly a valid JSON array of question objects without markdown tags:
   }
 ]`;
 
-    const result = await model.generateContent(prompt);
-    const responseText = cleanJsonResponse(result.response.text());
+    const responseText = cleanJsonResponse(await generateText(activeConfig, prompt));
     const parsed = JSON.parse(responseText);
 
     if (Array.isArray(parsed) && parsed.length > 0) {
@@ -256,10 +362,10 @@ Return strictly a valid JSON array of question objects without markdown tags:
 // --- 4. Quiz Evaluation & Mistake Analysis with Dynamic Adaptation ---
 export async function evaluateQuizAndAdapt(
   req: QuizEvaluationRequest,
-  customApiKey?: string,
-  aiMode: AiMode = 'gemini'
+  config?: AiConfig
 ): Promise<QuizResult> {
-  const apiKey = getActiveApiKey(customApiKey, aiMode);
+  const activeConfig = config ?? getAiConfig();
+  const apiKey = activeConfig.apiKey;
 
   if (!apiKey) {
     console.info('Using Mock Failover for Quiz Evaluation');
@@ -267,9 +373,6 @@ export async function evaluateQuizAndAdapt(
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `You are L.A.S.A. AI Adaptive Tutor.
 Evaluate the student's quiz attempt, diagnose specific conceptual weaknesses, and suggest targeted adaptive recovery recommendations.
 
@@ -294,8 +397,7 @@ Return strictly a JSON object matching this schema:
   "recommendedNextMilestone": string // title of the specific corrective study block to add
 }`;
 
-    const result = await model.generateContent(prompt);
-    const responseText = cleanJsonResponse(result.response.text());
+    const responseText = cleanJsonResponse(await generateText(activeConfig, prompt));
     const parsed = JSON.parse(responseText);
 
     return {
@@ -323,8 +425,7 @@ Return strictly a JSON object matching this schema:
 export async function explainConcept(
   topic: string,
   subject: string = 'General',
-  customApiKey?: string,
-  aiMode: AiMode = 'gemini'
+  config?: AiConfig
 ): Promise<{
   topic: string;
   summary: string;
@@ -333,16 +434,14 @@ export async function explainConcept(
   commonPitfall: string;
   quickCheckQuestion: { question: string; answer: string };
 }> {
-  const apiKey = getActiveApiKey(customApiKey, aiMode);
+  const activeConfig = config ?? getAiConfig();
+  const apiKey = activeConfig.apiKey;
 
   if (!apiKey) {
     return generateMockConceptExplanation(topic, subject);
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `You are L.A.S.A. AI Tutor.
 Provide a crystal-clear, intuitive explanation for this topic:
 Topic: "${topic}"
@@ -361,8 +460,7 @@ Return strictly a JSON object matching this schema:
   }
 }`;
 
-    const result = await model.generateContent(prompt);
-    const responseText = cleanJsonResponse(result.response.text());
+    const responseText = cleanJsonResponse(await generateText(activeConfig, prompt));
     const parsed = JSON.parse(responseText);
 
     return {
@@ -390,19 +488,16 @@ Return strictly a JSON object matching this schema:
 export async function breakdownTask(
   taskTitle: string,
   description?: string,
-  customApiKey?: string,
-  aiMode: AiMode = 'gemini'
+  config?: AiConfig
 ): Promise<TaskStep[]> {
-  const apiKey = getActiveApiKey(customApiKey, aiMode);
+  const activeConfig = config ?? getAiConfig();
+  const apiKey = activeConfig.apiKey;
 
   if (!apiKey) {
     return generateMockTaskBreakdown(taskTitle);
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `You are L.A.S.A. Productivity Coach.
 Break this task into 3-4 bite-sized, actionable, atomic sub-steps.
 Task Title: "${taskTitle}"
@@ -415,8 +510,7 @@ Return strictly a JSON array of step titles:
   "Step 3 action"
 ]`;
 
-    const result = await model.generateContent(prompt);
-    const responseText = cleanJsonResponse(result.response.text());
+    const responseText = cleanJsonResponse(await generateText(activeConfig, prompt));
     const parsed = JSON.parse(responseText);
 
     if (Array.isArray(parsed)) {
@@ -436,19 +530,16 @@ Return strictly a JSON array of step titles:
 // --- 6. Next Action Recommendation ---
 export async function recommendNextAction(
   state: SharedAppState,
-  customApiKey?: string,
-  aiMode: AiMode = 'gemini'
+  config?: AiConfig
 ): Promise<NextActionRecommendation> {
-  const apiKey = getActiveApiKey(customApiKey, aiMode);
+  const activeConfig = config ?? getAiConfig();
+  const apiKey = activeConfig.apiKey;
 
   if (!apiKey) {
     return generateMockNextAction(state);
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `You are L.A.S.A. Smartphone Assistant.
 Given the user's current context (tasks, upcoming events, recent quiz scores, active study plans), recommend the SINGLE most important next action they should take right now.
 
@@ -466,8 +557,7 @@ Return strictly a JSON object:
   "urgency": "high" | "medium" | "low"
 }`;
 
-    const result = await model.generateContent(prompt);
-    const responseText = cleanJsonResponse(result.response.text());
+    const responseText = cleanJsonResponse(await generateText(activeConfig, prompt));
     const parsed = JSON.parse(responseText);
 
     return {

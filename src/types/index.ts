@@ -106,7 +106,16 @@ export interface ConceptExplanation {
   };
 }
 
-// --- 4. Global Context Envelope ---
+// --- 4. AI Provider Configuration ---
+export type AiProvider = 'gemini' | 'openai-compatible';
+
+export interface AiModelOption {
+  id: string;
+  label: string;
+  ownedBy?: string;
+}
+
+// --- 5. Global Context Envelope ---
 export interface SharedAppState {
   tasks: Task[];
   events: ExtractedEvent[];
@@ -116,6 +125,10 @@ export interface SharedAppState {
   scans: VisualScanResult[];
   customApiKey: string;
   aiMode: 'gemini' | 'simulation';
+  aiProvider: AiProvider;
+  aiBaseUrl: string;
+  aiModel: string;
+  availableModels: AiModelOption[];
 }
 
 // --- 5. AI Service Request & Response Types ---

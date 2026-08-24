@@ -121,7 +121,7 @@ The browser prototype includes a centered phone shell, status area, app header, 
 
 ### Settings and execution modes
 
-The user can switch between **Demo Simulation** and optional **Live Gemini API** execution. Simulation mode keeps the demonstration usable without a key or network dependency. The Settings panel also exposes an optional Gemini key override, curated sound cues, visual haptics, local demo reset, and a live shared-context inspector.
+The user can switch between **Demo Simulation** and a configurable **Live Provider API** execution path. Simulation mode keeps the demonstration usable without a key or network dependency. For live testing, Settings supports Google Gemini or an **OpenAI-compatible gateway**, accepts a provider base URL and API key, discovers available models, lets the user select one, and routes the selected model across visual understanding, study planning, quizzes, concept explanations, task breakdown, and next-action recommendations. The browser prototype uses a same-origin proxy for OpenAI-compatible requests so gateways that reject browser preflight requests can still be tested without placing a provider secret in source control. Keys remain local to the browser in this prototype and should never be treated as production secrets.
 
 ---
 
@@ -135,11 +135,11 @@ The user can switch between **Demo Simulation** and optional **Live Gemini API**
 | **Shared context** | The in-browser state layer that lets Understand, Study Coach, and Productivity see related tasks, events, plans, and quiz history. |
 | **Local storage** | Browser storage used by this prototype to remember theme, demo state, preferences, and optional local configuration between refreshes. |
 | **Multimodal** | Able to work with more than one kind of input, such as text and images. Here it describes the document or poster understanding flow. |
-| **AI inference** | The step where an AI model generates an interpretation or response from input. L.A.S.A. can use live Gemini inference or the deterministic demo simulation path. [Gemini API documentation](https://ai.google.dev/gemini-api/docs) |
+| **AI inference** | The step where an AI model generates an interpretation or response from input. L.A.S.A. can use deterministic demo simulation or a selected live provider/model through the provider adapter. [Gemini API documentation](https://ai.google.dev/gemini-api/docs) |
 | **Adaptive learning** | A learning flow that uses quiz results or weak-topic signals to adjust what the user should study next. |
 | **Capacitor / APK path** | The intended Android packaging direction. An APK is the installable Android application package; the public hackathon path is currently the easier-to-access web prototype. [Capacitor documentation](https://capacitorjs.com/docs) |
 
-The project is deliberately lightweight. It uses React, TypeScript, Vite, Lucide icons, `canvas-confetti` for a small completion moment, and the optional Google Generative AI client already present in the repository. It does not introduce a database, authentication, complex routing library, or new backend service for the prototype.
+The project is deliberately lightweight. It uses React, TypeScript, Vite, Lucide icons, `canvas-confetti` for a small completion moment, the optional Google Generative AI client, and a small same-origin proxy for OpenAI-compatible model gateways. It does not introduce a database, authentication, or complex routing library for the prototype.
 
 The current browser state is local to the device and browser being used. That makes the demonstration quick and private, but it also means the prototype is not yet a synchronized multi-device product.
 
@@ -163,7 +163,8 @@ Browser phone shell
 │   ├── Task and sub-step management
 │   └── Calendar context
 ├── Settings
-│   ├── Simulation / Gemini strategy
+│   ├── Simulation / provider strategy
+│   ├── API key, base URL, and model selection
 │   ├── Optional local preferences
 │   └── Shared context inspector
 └── Shared browser state

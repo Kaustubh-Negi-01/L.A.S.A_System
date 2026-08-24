@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import {
   SharedAppState,
   Task,
@@ -11,7 +11,7 @@ import {
 } from '../types';
 import { loadAppState, saveAppState } from '../utils/storage';
 import { initialDemoState } from '../services/mockData';
-import { breakdownTask } from '../services/geminiService';
+import { breakdownTask, getAiConfig, type AiConfig } from '../services/geminiService';
 
 interface SharedContextValue extends SharedAppState {
   // Task Actions
@@ -40,6 +40,11 @@ interface SharedContextValue extends SharedAppState {
   // Settings & Reset
   setCustomApiKey: (key: string) => void;
   setAiMode: (mode: 'gemini' | 'simulation') => void;
+  setAiProvider: (provider: SharedAppState['aiProvider']) => void;
+  setAiBaseUrl: (url: string) => void;
+  setAiModel: (model: string) => void;
+  setAvailableModels: (models: SharedAppState['availableModels']) => void;
+  getAiConfig: () => AiConfig;
   resetToDemoData: () => void;
 }
 
@@ -105,7 +110,11 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     if (!targetTask) return;
 
     try {
-      const generatedSteps = await breakdownTask(targetTask.title, targetTask.description, state.customApiKey, state.aiMode);
+      const generatedSteps = await breakdownTask(
+        targetTask.title,
+        targetTask.description,
+        getAiConfig(state.customApiKey, state.aiMode, state.aiProvider, state.aiBaseUrl, state.aiModel)
+      );
       setState(prev => ({
         ...prev,
         tasks: prev.tasks.map(t => (t.id === taskId ? { ...t, steps: generatedSteps } : t))
@@ -330,6 +339,30 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setState(prev => ({ ...prev, aiMode: mode }));
   };
 
+  const setAiProvider = (provider: SharedAppState['aiProvider']) => {
+    setState(prev => ({ ...prev, aiProvider: provider }));
+  };
+
+  const setAiBaseUrl = (url: string) => {
+    setState(prev => ({ ...prev, aiBaseUrl: url }));
+  };
+
+  const setAiModel = (model: string) => {
+    setState(prev => ({ ...prev, aiModel: model }));
+  };
+
+  const setAvailableModels = (models: SharedAppState['availableModels']) => {
+    setState(prev => ({ ...prev, availableModels: models }));
+  };
+
+  const getCurrentAiConfig = useCallback(() => getAiConfig(
+    state.customApiKey,
+    state.aiMode,
+    state.aiProvider,
+    state.aiBaseUrl,
+    state.aiModel
+  ), [state.customApiKey, state.aiMode, state.aiProvider, state.aiBaseUrl, state.aiModel]);
+
   const resetToDemoData = () => {
     setState(initialDemoState);
   };
@@ -355,6 +388,11 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         dispatchScanToApp,
         setCustomApiKey,
         setAiMode,
+        setAiProvider,
+        setAiBaseUrl,
+        setAiModel,
+        setAvailableModels,
+        getAiConfig: getCurrentAiConfig,
         resetToDemoData
       }}
     >

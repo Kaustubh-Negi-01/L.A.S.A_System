@@ -2,7 +2,11 @@ import { SharedAppState, Task, ExtractedEvent, StudyPlan, QuizResult, VisualScan
 
 export const initialDemoState: SharedAppState = {
   customApiKey: '',
-  aiMode: 'gemini',
+  aiMode: 'simulation',
+  aiProvider: 'gemini',
+  aiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+  aiModel: 'gemini-1.5-flash',
+  availableModels: [],
   tasks: [
     {
       id: 'task-1',

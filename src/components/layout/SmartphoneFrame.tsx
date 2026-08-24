@@ -53,7 +53,7 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   onSwipeUpHome,
   onNavigateToTab
 }) => {
-  const { customApiKey, aiMode, resetToDemoData } = useSharedContext();
+  const { customApiKey, aiMode, aiProvider, aiModel, resetToDemoData } = useSharedContext();
   const [currentTime, setCurrentTime] = useState<string>('09:41');
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [isResetting, setIsResetting] = useState(false);
@@ -64,7 +64,9 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   const phoneRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number; target: EventTarget | null } | null>(null);
   const copy = sectionCopy[activeTab];
-  const isLive = aiMode === 'gemini' && Boolean(customApiKey || import.meta.env.VITE_GEMINI_API_KEY);
+  const isLive = aiMode !== 'simulation' && Boolean(customApiKey || (aiProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY));
+  const providerLabel = aiProvider === 'gemini' ? 'GEMINI' : 'GATEWAY';
+  const connectionTitle = isLive ? `${providerLabel} · ${aiModel || 'model'}` : 'Local simulation engine';
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -164,10 +166,10 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
         {feedbackPoint && <span key={feedbackPoint.key} className="feedback-ripple" style={{ left: feedbackPoint.x, top: feedbackPoint.y }} aria-hidden="true" />}
         <div className="phone-status-bar">
           <span className="status-time">{currentTime}</span>
-          <div className="dynamic-island-notch" title={isLive ? 'Gemini connected' : 'Local simulation engine'}>
+            <div className="dynamic-island-notch" title={connectionTitle}>
             <div className="camera-lens" />
             <div className="ai-pulse-dot" />
-            <span className="notch-label">{isLive ? 'GEMINI' : 'LOCAL'}</span>
+              <span className="notch-label">{isLive ? providerLabel : 'LOCAL'}</span>
           </div>
           <div className="status-icons" aria-label="Network and battery status">
             <Wifi size={13} />

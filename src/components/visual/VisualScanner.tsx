@@ -10,7 +10,7 @@ interface VisualScannerProps {
 }
 
 export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) => {
-  const { customApiKey, aiMode, addScanResult } = useSharedContext();
+  const { getAiConfig, addScanResult } = useSharedContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -94,14 +94,6 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
     }
   };
 
-  const openFilePicker = () => fileInputRef.current?.click();
-
-  const handleSourceTileKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, action: () => void) => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-    event.preventDefault();
-    action();
-  };
-
   // Preset Selection for Instant Demo
   const handleSelectPreset = (preset: typeof sampleImagePresets[0]) => {
     stopCamera();
@@ -119,7 +111,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
         const presetObj = sampleImagePresets.find(p => p.id === activePreset);
         scanResult = generateMockVisualInsights(presetObj?.imagePromptText);
       } else if (selectedImage) {
-        scanResult = await extractVisualInsights(selectedImage, mimeType, customApiKey, aiMode);
+        scanResult = await extractVisualInsights(selectedImage, mimeType, getAiConfig());
       } else {
         scanResult = generateMockVisualInsights();
       }
@@ -161,11 +153,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
             return (
               <button
                 key={preset.id}
-                type="button"
-                className={`scanner-preset ${isSelected ? 'is-selected' : ''}`}
                 onClick={() => handleSelectPreset(preset)}
-                aria-pressed={isSelected}
-                data-feedback="open"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -200,7 +188,6 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
       {/* Camera Preview Mode */}
       {isCameraActive ? (
         <div
-          className="scanner-camera-preview"
           style={{
             padding: '12px',
             borderRadius: '8px',
@@ -230,14 +217,9 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
       ) : (
         /* Image Dropzone & Camera Trigger */
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-        <div
-          className="scanner-source-tile"
-          role="button"
-          tabIndex={0}
-          aria-label="Upload image file"
-          onClick={openFilePicker}
-          onKeyDown={event => handleSourceTileKeyDown(event, openFilePicker)}
-          style={{
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            style={{
               padding: '16px 12px',
               borderRadius: '6px',
               border: '2px dashed var(--border-subtle)',
@@ -249,7 +231,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
-              transition: 'border-color 0.18s ease, background-color 0.18s ease, transform 0.14s var(--ease-out)'
+              transition: 'all 0.2s ease'
             }}
           >
             <input
@@ -264,12 +246,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
           </div>
 
           <div
-            className="scanner-source-tile scanner-camera-tile"
-            role="button"
-            tabIndex={0}
-            aria-label="Use live camera"
             onClick={startCamera}
-            onKeyDown={event => handleSourceTileKeyDown(event, startCamera)}
             style={{
               padding: '16px 12px',
               borderRadius: '6px',
@@ -282,7 +259,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
-              transition: 'border-color 0.18s ease, background-color 0.18s ease, transform 0.14s var(--ease-out)'
+              transition: 'all 0.2s ease'
             }}
           >
             <Video size={20} color="var(--secondary-purple)" />
@@ -293,14 +270,14 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
 
       {/* Camera Error Banner */}
       {cameraError && (
-        <div className="scanner-error-banner" role="status" aria-live="polite" style={{ fontSize: '11px', color: '#fb7185', marginBottom: '10px' }}>
+        <div style={{ fontSize: '11px', color: '#fb7185', marginBottom: '10px' }}>
           {cameraError}
         </div>
       )}
 
       {/* Selected Image Thumbnail */}
       {selectedImage && (
-        <div className="scanner-ready-state" role="status" aria-live="polite" style={{ textAlign: 'center', marginBottom: '14px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '14px' }}>
           <img
             src={selectedImage}
             alt="Uploaded Preview"
@@ -316,8 +293,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
       <button
         onClick={handleProcessScan}
         disabled={isScanning || (!selectedImage && !activePreset)}
-        className={`btn-primary ${isScanning ? 'is-processing' : ''}`}
-        data-feedback="success"
+        className="btn-primary"
         style={{ width: '100%' }}
       >
         {isScanning ? (

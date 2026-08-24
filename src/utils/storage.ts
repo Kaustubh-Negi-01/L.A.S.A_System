@@ -11,6 +11,10 @@ export function loadAppState(): SharedAppState {
       return {
         ...initialDemoState,
         ...parsed,
+        aiProvider: parsed.aiProvider || initialDemoState.aiProvider,
+        aiBaseUrl: parsed.aiBaseUrl || initialDemoState.aiBaseUrl,
+        aiModel: parsed.aiModel || initialDemoState.aiModel,
+        availableModels: Array.isArray(parsed.availableModels) ? parsed.availableModels : initialDemoState.availableModels,
       };
     }
   } catch (err) {

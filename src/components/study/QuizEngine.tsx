@@ -20,7 +20,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
   onFinishQuiz,
   onCancel
 }) => {
-  const { customApiKey, aiMode, recordQuizResult } = useSharedContext();
+  const { getAiConfig, recordQuizResult } = useSharedContext();
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -41,8 +41,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
             questionCount: 3,
             difficulty: 'medium'
           },
-          customApiKey,
-          aiMode
+          getAiConfig()
         );
         if (isMounted) {
           setQuestions(fetched);
@@ -58,7 +57,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [subject, topic, customApiKey, aiMode]);
+  }, [subject, topic, getAiConfig]);
 
   // Timer Countdown
   useEffect(() => {
@@ -98,8 +97,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           questions,
           userAnswers: selectedAnswers
         },
-        customApiKey,
-        aiMode
+        getAiConfig()
       );
 
       // Trigger celebratory confetti if score is high
