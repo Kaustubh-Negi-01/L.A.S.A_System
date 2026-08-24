@@ -1,0 +1,18 @@
+flowchart LR
+    A[Scan a notice<br/>or document] --> B[Understand & Act<br/>extract dates, places, actions]
+    B -->|one-touch dispatch| C{Shared Context}
+    C --> D[Calendar & schedule]
+    C --> E[Study Coach<br/>targeted plan]
+    E --> F[Diagnostic quiz]
+    F -->|find weak concepts| E
+    F --> G[Productivity Coach<br/>priority task]
+    G --> H[Recommended next action]
+    H --> I[User completes<br/>the next step]
+    I --> C
+
+    classDef input fill:#1d2424,stroke:#a8c875,color:#f0f2ee,stroke-width:1.5px;
+    classDef engine fill:#273126,stroke:#c5e08d,color:#f0f2ee,stroke-width:2px;
+    classDef output fill:#222a2c,stroke:#8eaaa0,color:#f0f2ee,stroke-width:1.5px;
+    class A,B input;
+    class C engine;
+    class D,E,F,G,H,I output;
