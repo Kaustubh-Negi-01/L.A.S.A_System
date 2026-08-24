@@ -37,6 +37,40 @@ For an iQOO user, the experience can become a fast daily layer above study, dead
 
 The most important design principle is **low friction**: useful assistance should feel like a natural extension of the phone, not another complex app that demands a long setup process.
 
+## The local-AI opportunity on an iQOO flagship
+
+The strongest future direction for L.A.S.A. is to use the AI accelerator inside a compatible NPU-enabled iQOO flagship for the tasks that benefit most from privacy and low latency. An **NPU**, or Neural Processing Unit, is a processor specialized for the repeated mathematical operations used by neural-network models. In practical terms, it can help a phone run selected AI tasks locally instead of sending every image, voice sample, or personal note to a server.
+
+This proposal is grounded in the current Qualcomm device ecosystem rather than a claim that the browser prototype already runs on an NPU. Qualcomm AI Hub describes a unified runtime across NPU, GPU, and CPU and provides optimized models, deployment runtimes, and device profiling tools [1]. Its model catalog includes Snapdragon 8 Elite and Snapdragon 8 Elite Gen 5 mobile platforms, as well as multimodal, generative-AI, computer-vision, and audio categories [2]. Official iQOO product pages identify the iQOO 13 with the Snapdragon 8 Elite Mobile Platform and the iQOO 15 with the Snapdragon 8 Elite Gen 5 Mobile Platform [3] [4]. These devices are therefore useful target examples for a future implementation, but final support must be validated against the exact handset SKU, RAM, thermals, operating-system APIs, model quantization, and OEM integration permissions.
+
+### Probable local model stack
+
+The following is the **proposed model shortlist to benchmark**, not a promise that every model will ship or that every model will fit every phone. The final stack should be selected using accuracy, memory footprint, first-response latency, sustained temperature, battery cost, language coverage, and license compatibility.
+
+| Local capability | Probable candidate models | L.A.S.A. role | Why it belongs on the phone |
+| --- | --- | --- | --- |
+| **Document and image understanding** | Qwen3-VL-4B-Instruct; Gemma-4-E2B-it | Interpret exam circulars, posters, assignment briefs, and screenshots before structured action extraction. | Personal documents stay local when possible, and the first response can be faster without a round trip. |
+| **Compact planning and next-action reasoning** | Qwen3-1.7B; Qwen3-4B | Convert extracted facts and shared context into concise plans, priorities, and next steps. | A smaller quantized model is more practical for frequent phone interactions than a very large model. |
+| **Voice input** | Whisper-Base; Whisper-Tiny or Whisper-Small after benchmarking | Turn a spoken request such as “remind me about this exam” into text for the same context loop. Qualcomm AI Hub lists Whisper-Base as an edge-optimized multilingual automatic speech-recognition model with phone form-factor support [5]. | Voice capture can remain on-device and work in lower-connectivity situations. |
+| **Local retrieval** | A compact embedding and reranking model selected for the target runtime | Find the most relevant task, study note, deadline, or prior quiz result from local shared context. | Retrieval avoids repeatedly sending the user’s personal context to a remote service. |
+| **Safety and routing** | A small intent, privacy, and confidence classifier selected during implementation | Decide whether a request is safe and simple enough for local execution or should be escalated. | It keeps routine operations predictable and gives the system a clear fallback boundary. |
+
+The proposed runtime path would use Qualcomm AI Hub optimization and a supported on-device runtime such as Qualcomm AI Runtime, ONNX Runtime, TFLite, or a GenieX path where appropriate [1] [2]. Quantization means storing model numbers in a smaller representation so they consume less memory and energy; the trade-off is that accuracy must be measured again after conversion. The NPU would be the preferred accelerator, with GPU or CPU fallback when a particular model, operation, or device does not support the required kernel.
+
+### Local-first, cloud-when-needed
+
+The intended production architecture is not “everything must be local” and not “everything goes to the cloud.” It is a **local-first routing policy**:
+
+| Request type | Preferred path | Fallback |
+| --- | --- | --- |
+| Extracting dates, places, and action items from a notice | Local vision-language model plus structured parser | Gemini or another approved cloud model when confidence is low |
+| Looking up a task or study item already stored on the phone | Local retrieval and compact planner | No cloud call required |
+| Quick voice command | Local Whisper-family speech model | Cloud transcription only with user consent |
+| Complex open-ended reasoning or large document analysis | Local model first when feasible | Optional Gemini mode in the current prototype and future product |
+| Sensitive or ambiguous request | Local privacy/intent gate | Ask for confirmation or decline rather than silently sending data |
+
+This is where an iQOO flagship can make the experience feel meaningfully different: the phone can respond quickly to everyday actions, reduce unnecessary network dependence, and keep more personal context close to the user. The production implementation would still require profiling and validation on the chosen iQOO hardware; the current browser build demonstrates the workflow and interaction model, not the completed NPU runtime.
+
 ---
 
 ## The core innovation: shared context across three modes
@@ -200,6 +234,18 @@ The long-term vision is an assistant that quietly turns phone moments into usefu
 | **Hamza** | Gemini AI services, Productivity Coach, and AI pipelines |
 
 ---
+
+## References
+
+[1]: https://aihub.qualcomm.com/en-US "Qualcomm AI Hub — on-device AI development stack"
+
+[2]: https://aihub.qualcomm.com/en-US/models "Qualcomm AI Hub — model catalog"
+
+[3]: https://www.iqoo.com/in/products/iqoo13 "iQOO 13 — official product page"
+
+[4]: https://shop.iqoo.com/in/product/2067 "iQOO 15 — official product listing"
+
+[5]: https://aihub.qualcomm.com/models/whisper_base "Qualcomm AI Hub — Whisper-Base model"
 
 ## License
 
