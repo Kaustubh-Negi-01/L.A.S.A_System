@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type PointerEvent } from 'react';
 import { ArrowRight, Check, Eye, GraduationCap, Zap } from 'lucide-react';
 
 export type AppTab = 'visual' | 'study' | 'productivity';
@@ -43,6 +43,18 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelectMode }) =>
     window.setTimeout(() => onSelectMode(mode), 220);
   };
 
+  const handlePointerMove = (event: PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType !== 'mouse') return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty('--pointer-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
+    event.currentTarget.style.setProperty('--pointer-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
+  };
+
+  const clearPointerPosition = (event: PointerEvent<HTMLButtonElement>) => {
+    event.currentTarget.style.removeProperty('--pointer-x');
+    event.currentTarget.style.removeProperty('--pointer-y');
+  };
+
   return (
   <section className="mode-selection" aria-labelledby="mode-selection-title">
     <div className="mode-selection-intro">
@@ -61,6 +73,9 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelectMode }) =>
           type="button"
           className={`mode-option mode-option-${accent} ${selectedMode === id ? 'is-selected' : ''} ${selectedMode && selectedMode !== id ? 'is-muted' : ''}`}
           onClick={() => handleSelectMode(id)}
+          onPointerMove={handlePointerMove}
+          onPointerLeave={clearPointerPosition}
+          onPointerCancel={clearPointerPosition}
           aria-pressed={selectedMode === id}
         >
           <span className="mode-option-orbit" aria-hidden="true" />
