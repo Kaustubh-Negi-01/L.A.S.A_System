@@ -27,7 +27,15 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ onExecuteAction 
 
   useEffect(() => {
     fetchRecommendation();
-  }, [state.tasks.length, state.quizHistory.length, state.studyPlans.length, state.aiMode]);
+  }, [
+    state.tasks,
+    state.events,
+    state.studyPlans,
+    state.quizHistory,
+    state.activeStudyPlanId,
+    state.customApiKey,
+    state.aiMode
+  ]);
 
   if (loading) {
     return (
