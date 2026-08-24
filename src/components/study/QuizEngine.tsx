@@ -182,15 +182,16 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
             <button
               key={optIdx}
               onClick={() => handleSelectOption(currentQ.id, optIdx)}
+              aria-pressed={isSelected}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
                 padding: '12px 14px',
                 borderRadius: '3px',
-                background: isSelected ? 'rgba(208, 138, 103, 0.15)' : 'var(--surface-raised)',
-                border: `1px solid ${isSelected ? '#d08a67' : 'var(--border-subtle)'}`,
-                color: isSelected ? '#fff' : 'var(--text-muted)',
+                background: isSelected ? 'rgba(255, 255, 255, 0.1)' : 'var(--surface-raised)',
+                border: `1px solid ${isSelected ? 'rgba(255, 255, 255, 0.78)' : 'var(--border-subtle)'}`,
+                color: isSelected ? '#ffffff' : 'var(--text-muted)',
                 textAlign: 'left',
                 transition: 'all 0.2s ease',
                 fontSize: '13px'
@@ -204,8 +205,8 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: isSelected ? '#d08a67' : 'var(--surface-raised)',
-                  color: isSelected ? '#04060a' : 'var(--text-muted)',
+                  background: isSelected ? '#ffffff' : 'var(--surface-raised)',
+                  color: isSelected ? '#101313' : 'var(--text-muted)',
                   fontWeight: 700,
                   fontSize: '11px',
                   flexShrink: 0
