@@ -1614,3 +1614,55 @@ a,
   .mode-option:focus-visible .motif-scan-line,
   .mode-option.is-selected .motif-scan-line { opacity: .38; transform: none; }
 }
+
+
+/* Current-mode indicator: the bottom surface is informational, not navigational. */
+.bottom-nav-bar {
+  justify-content: center;
+}
+
+.nav-current-mode {
+  flex: 0 0 min(220px, 100%);
+  width: min(220px, 100%);
+  cursor: default;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.nav-current-mode:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.nav-current-mode:active {
+  transform: none;
+}
+
+.nav-current-mode .nav-icon {
+  transition: color 180ms ease, transform 220ms var(--ease-out);
+}
+
+.nav-current-mode:hover .nav-icon {
+  transform: translateY(-1px) scale(1.04);
+}
+
+.nav-current-mode .nav-active-pill {
+  animation: nav-indicator-in 260ms var(--ease-out) both;
+}
+
+@media (max-width: 390px) {
+  .nav-current-mode {
+    flex-basis: min(220px, 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-current-mode .nav-icon,
+  .nav-current-mode .nav-active-pill {
+    animation: none;
+    transition: none;
+  }
+
+  .nav-current-mode:hover .nav-icon {
+    transform: none;
+  }
+}
