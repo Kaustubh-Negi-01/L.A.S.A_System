@@ -79,6 +79,39 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelectMode }) =>
           aria-pressed={selectedMode === id}
         >
           <span className="mode-option-orbit" aria-hidden="true" />
+          <span className={`mode-option-motif mode-option-motif-${id}`} aria-hidden="true">
+            {id === 'study' && (
+              <>
+                <span className="motif-paper motif-paper-back" />
+                <span className="motif-paper motif-paper-front">
+                  <span className="motif-paper-line motif-paper-line-one" />
+                  <span className="motif-paper-line motif-paper-line-two" />
+                  <span className="motif-paper-line motif-paper-line-three" />
+                  <span className="motif-paper-mark" />
+                </span>
+                <span className="motif-study-spark motif-study-spark-one" />
+                <span className="motif-study-spark motif-study-spark-two" />
+              </>
+            )}
+            {id === 'visual' && (
+              <>
+                <span className="motif-focus-ring motif-focus-ring-outer" />
+                <span className="motif-focus-ring motif-focus-ring-inner" />
+                <span className="motif-focus-frame" />
+                <span className="motif-scan-line" />
+                <span className="motif-target-dot" />
+              </>
+            )}
+            {id === 'productivity' && (
+              <>
+                <span className="motif-task-card motif-task-card-back"><span className="motif-task-check" /></span>
+                <span className="motif-task-card motif-task-card-middle"><span className="motif-task-check" /></span>
+                <span className="motif-task-card motif-task-card-front"><span className="motif-task-check" /></span>
+                <span className="motif-action-check" />
+                <span className="motif-connector" />
+              </>
+            )}
+          </span>
           <span className="mode-option-icon"><Icon size={27} strokeWidth={1.8} /></span>
           <span className="mode-option-label">{label}</span>
           <span className="mode-option-supporting">{supportingText}</span>
