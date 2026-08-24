@@ -160,14 +160,28 @@ export const MiniCalendar: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => deleteEvent(event.id)}
-              className="icon-btn"
-              style={{ width: '24px', height: '24px', padding: 0 }}
-              title="Delete Event"
-            >
-              <Trash2 size={12} color="#d27568" />
-            </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <a
+                  href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.date.replace(/-/g, '')}${event.time ? 'T' + event.time.replace(/:/g, '') + '00' : ''}/${event.date.replace(/-/g, '')}${event.time ? 'T' + event.time.replace(/:/g, '') + '00' : ''}&details=${encodeURIComponent(event.description || '')}&location=${encodeURIComponent(event.location || '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="icon-btn"
+                  style={{ width: '24px', height: '24px', padding: 0 }}
+                  title="Add to Google Calendar"
+                  aria-label="Add to Google Calendar"
+                >
+                  <CalendarIcon size={12} color="var(--primary-cyan)" />
+                </a>
+                <button
+                  onClick={() => deleteEvent(event.id)}
+                  className="icon-btn"
+                  style={{ width: '24px', height: '24px', padding: 0 }}
+                  title="Delete Event"
+                  aria-label="Delete Event"
+                >
+                  <Trash2 size={12} color="#d27568" />
+                </button>
+              </div>
           </div>
         ))}
       </div>

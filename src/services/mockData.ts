@@ -393,11 +393,37 @@ export function evaluateMockQuiz(
     totalQuestions,
     percentage,
     userAnswers,
+    questions,
     weakTopics: weakTopics.length ? weakTopics : ['Edge-case analysis'],
     strengths: strengths.length ? strengths : ['Basic concepts'],
     adaptiveFeedback,
     recommendedNextMilestone,
     completedAt: new Date().toISOString()
+  };
+}
+
+export function generateMockConceptExplanation(topic: string, subject: string = 'General'): {
+  topic: string;
+  summary: string;
+  keyPoints: string[];
+  mnemonicOrAnalogy: string;
+  commonPitfall: string;
+  quickCheckQuestion: { question: string; answer: string };
+} {
+  return {
+    topic,
+    summary: `${topic} is a core foundational concept in ${subject} designed to optimize efficiency, enforce invariants, and eliminate systemic bottlenecks.`,
+    keyPoints: [
+      `Structure & Invariants: Guarantees deterministic state transitions under nominal execution.`,
+      `Complexity Profile: Operates with optimal amortized time O(1) to logarithmic O(log N) operations.`,
+      `Edge Boundary Handling: Requires explicit null checks, overflow guards, and recursion base cases.`
+    ],
+    mnemonicOrAnalogy: `Mental Model: Think of ${topic} like a high-speed airport conveyor system—items must follow strict indexing rules to prevent collisions and congestion.`,
+    commonPitfall: `Common Mistake: Forgetting base termination criteria or failing to account for cyclic references, which causes runaway recursion or memory leaks.`,
+    quickCheckQuestion: {
+      question: `What is the primary condition required to maintain consistency in ${topic}?`,
+      answer: `Ensuring state transitions preserve core structural invariants and prevent cyclic reference deadlocks.`
+    }
   };
 }
 

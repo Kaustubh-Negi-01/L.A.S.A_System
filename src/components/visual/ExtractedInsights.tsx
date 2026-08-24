@@ -7,9 +7,10 @@ import {
   Zap,
   GraduationCap,
   Sparkles,
-  ArrowRight,
-  ListTodo,
-  Share2
+  ExternalLink,
+  Share2,
+  Copy,
+  Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { VisualScanResult } from '../../types';
@@ -29,6 +30,7 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
   onScanAnother
 }) => {
   const { dispatchScanToApp } = useSharedContext();
+  const [copied, setCopied] = useState(false);
   const [dispatchResult, setDispatchResult] = useState<{
     dispatched: boolean;
     addedTasks: number;
@@ -62,14 +64,60 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
     && dispatchResult.addedEvents === 0
     && !dispatchResult.planCreated;
 
+  const handleShare = async () => {
+    const textToShare = `📋 ${scan.title}\n📅 Date: ${scan.extractedDates[0] || 'TBD'}\nSummary: ${scan.summary}\nAction Items:\n${scan.actionItems.map(a => '• ' + a).join('\n')}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: scan.title,
+          text: textToShare
+        });
+        return;
+      } catch (err) {
+        // Fallback to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(textToShare);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.warn('Clipboard write failed:', e);
+    }
+  };
+
+  const getGoogleCalendarUrl = () => {
+    if (!primaryEvent) return '#';
+    const dateStr = primaryEvent.date.replace(/-/g, '');
+    const timeStr = primaryEvent.time ? 'T' + primaryEvent.time.replace(/:/g, '') + '00' : '';
+    const startDateTime = `${dateStr}${timeStr}`;
+    const text = encodeURIComponent(primaryEvent.title);
+    const details = encodeURIComponent(`${scan.summary}\n\nActions:\n${scan.actionItems.join('\n')}`);
+    const loc = encodeURIComponent(primaryEvent.location || '');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startDateTime}/${startDateTime}&details=${details}&location=${loc}`;
+  };
+
   return (
     <div className="glass-panel animate-slide-up" style={{ padding: '18px' }}>
       <div className="card-header-row">
         <div className="card-title">
-          <Sparkles size={18} color="#d08a67" />
+          <Sparkles size={18} color="var(--primary-cyan)" />
           <span>Extracted Document Intelligence</span>
         </div>
-        <span className="badge badge-green">AI Processed</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            onClick={handleShare}
+            className="icon-btn"
+            style={{ width: '28px', height: '28px' }}
+            title="Share or Copy Summary"
+            aria-label="Share summary"
+          >
+            {copied ? <Check size={13} color="#34d399" /> : <Share2 size={13} />}
+          </button>
+          <span className="badge badge-green">AI Processed</span>
+        </div>
       </div>
 
       {/* Title & Summary */}
@@ -85,9 +133,9 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
         <div
           style={{
             padding: '12px 14px',
-            borderRadius: '3px',
-            background: 'linear-gradient(135deg, rgba(208, 138, 103, 0.08) 0%, rgba(156, 132, 128, 0.08) 100%)',
-            border: '1px solid rgba(208, 138, 103, 0.25)',
+            borderRadius: '6px',
+            background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)',
+            border: '1px solid rgba(0, 240, 255, 0.25)',
             marginBottom: '14px'
           }}
         >
@@ -100,21 +148,41 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Calendar size={12} color="#d08a67" />
+              <Calendar size={12} color="var(--primary-cyan)" />
               <span>{primaryEvent.date}</span>
             </div>
             {primaryEvent.time && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Clock size={12} color="#e3b56d" />
+                <Clock size={12} color="#fbbf24" />
                 <span>{primaryEvent.time}</span>
               </div>
             )}
             {primaryEvent.location && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', gridColumn: 'span 2' }}>
-                <MapPin size={12} color="#e39485" />
+                <MapPin size={12} color="#fb7185" />
                 <span>{primaryEvent.location}</span>
               </div>
             )}
+          </div>
+
+          <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+            <a
+              href={getGoogleCalendarUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                color: 'var(--primary-cyan)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                textDecoration: 'none'
+              }}
+            >
+              <span>Add to Google Calendar</span>
+              <ExternalLink size={11} />
+            </a>
           </div>
         </div>
       )}
@@ -141,7 +209,7 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
                   color: 'var(--text)'
                 }}
               >
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#d08a67' }} />
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary-cyan)' }} />
                 <span>{item}</span>
               </div>
             ))}
@@ -154,13 +222,13 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
         <div
           style={{
             padding: '12px',
-            borderRadius: '3px',
-            background: 'rgba(166, 178, 123, 0.1)',
-            border: '1px solid rgba(166, 178, 123, 0.3)',
+            borderRadius: '6px',
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
             marginBottom: '16px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#a6b27b', fontWeight: 700, fontSize: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#34d399', fontWeight: 700, fontSize: '12px' }}>
             <CheckCircle size={15} />
             <span>{wasAlreadyInSync ? 'Already synced across L.A.S.A.' : 'Successfully synced across L.A.S.A.'}</span>
           </div>

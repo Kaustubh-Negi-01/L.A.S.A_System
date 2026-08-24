@@ -86,11 +86,24 @@ export interface QuizResult {
   totalQuestions: number;
   percentage: number;
   userAnswers: { [questionId: string]: number }; // questionId -> selectedOptionIndex
+  questions?: QuizQuestion[]; // Preserved questions for in-depth review
   weakTopics: string[];
   strengths: string[];
   adaptiveFeedback: string;
   recommendedNextMilestone?: string;
   completedAt: string;
+}
+
+export interface ConceptExplanation {
+  topic: string;
+  summary: string;
+  keyPoints: string[];
+  mnemonicOrAnalogy: string;
+  commonPitfall: string;
+  quickCheckQuestion: {
+    question: string;
+    answer: string;
+  };
 }
 
 // --- 4. Global Context Envelope ---

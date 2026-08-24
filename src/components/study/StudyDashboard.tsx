@@ -18,7 +18,9 @@ import { useSharedContext } from '../../context/SharedContext';
 import { StudyPlanGenerator } from './StudyPlanGenerator';
 import { QuizEngine } from './QuizEngine';
 import { MistakeAnalysis } from './MistakeAnalysis';
+import { ConceptExplainerModal } from './ConceptExplainerModal';
 import { QuizResult } from '../../types';
+import { Lightbulb } from 'lucide-react';
 
 export const StudyDashboard: React.FC = () => {
   const { studyPlans, activeStudyPlanId, setActiveStudyPlan, toggleMilestone, quizHistory } = useSharedContext();
@@ -26,6 +28,7 @@ export const StudyDashboard: React.FC = () => {
   const [viewState, setViewState] = useState<'dashboard' | 'create_plan' | 'quiz' | 'analysis'>('dashboard');
   const [selectedTopicForQuiz, setSelectedTopicForQuiz] = useState<string>('');
   const [lastQuizResult, setLastQuizResult] = useState<QuizResult | null>(null);
+  const [explainingTopic, setExplainingTopic] = useState<string | null>(null);
 
   const activePlan = studyPlans.find(p => p.id === activeStudyPlanId) || studyPlans[0];
 
@@ -280,26 +283,46 @@ export const StudyDashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-
-                  <button
-                    onClick={() => handleStartQuiz(m.topic)}
-                    title="Test this topic"
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      background: 'rgba(208, 138, 103, 0.08)',
-                      border: '1px solid rgba(208, 138, 103, 0.2)',
-                      color: 'var(--primary-cyan)',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    <PlayCircle size={12} />
-                    Quiz
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button
+                      onClick={() => setExplainingTopic(m.topic)}
+                      title="Explain Concept with AI"
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        background: 'rgba(0, 240, 255, 0.08)',
+                        border: '1px solid rgba(0, 240, 255, 0.25)',
+                        color: 'var(--primary-cyan)',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Lightbulb size={12} />
+                      Explain
+                    </button>
+                    <button
+                      onClick={() => handleStartQuiz(m.topic)}
+                      title="Test this topic"
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        background: 'rgba(208, 138, 103, 0.08)',
+                        border: '1px solid rgba(208, 138, 103, 0.2)',
+                        color: 'var(--primary-cyan)',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <PlayCircle size={12} />
+                      Quiz
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -339,8 +362,8 @@ export const StudyDashboard: React.FC = () => {
                 }}
                 style={{
                   padding: '8px 12px',
-                  borderRadius: '5px',
-                  background: 'var(--surface-muted)',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.03)',
                   border: '1px solid var(--border-subtle)',
                   display: 'flex',
                   alignItems: 'center',
@@ -349,7 +372,7 @@ export const StudyDashboard: React.FC = () => {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)' }}>{q.subject}</div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#fff' }}>{q.subject}</div>
                   <div style={{ fontSize: '10px', color: 'var(--text-dim)' }}>
                     Weak in: {q.weakTopics.join(', ') || 'None'}
                   </div>
@@ -364,6 +387,20 @@ export const StudyDashboard: React.FC = () => {
             ))}
           </div>
         </div>
+      )}
+
+      {/* AI Concept Explainer Modal */}
+      {explainingTopic && activePlan && (
+        <ConceptExplainerModal
+          topic={explainingTopic}
+          subject={activePlan.subject}
+          isOpen={Boolean(explainingTopic)}
+          onClose={() => setExplainingTopic(null)}
+          onLaunchQuiz={topic => {
+            setExplainingTopic(null);
+            handleStartQuiz(topic);
+          }}
+        />
       )}
     </div>
   );

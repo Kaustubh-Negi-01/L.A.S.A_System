@@ -154,6 +154,102 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({
         </span>
       </div>
 
+      {/* Question-by-Question Deep Dive Review */}
+      {result.questions && result.questions.length > 0 && (
+        <div className="glass-panel" style={{ padding: '14px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <BookOpen size={14} color="var(--primary-cyan)" />
+            QUESTION-BY-QUESTION REVIEW
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {result.questions.map((q, qIdx) => {
+              const selectedOpt = result.userAnswers[q.id];
+              const isCorrect = selectedOpt === q.correctOptionIndex;
+
+              return (
+                <div
+                  key={q.id || qIdx}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    background: isCorrect ? 'rgba(16, 185, 129, 0.04)' : 'rgba(244, 63, 94, 0.04)',
+                    border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '6px', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)' }}>
+                      Q{qIdx + 1}. {q.question}
+                    </span>
+                    <span className={`badge ${isCorrect ? 'badge-green' : 'badge-red'}`} style={{ flexShrink: 0 }}>
+                      {isCorrect ? 'Correct' : 'Incorrect'}
+                    </span>
+                  </div>
+
+                  {/* Options state */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '8px 0' }}>
+                    {q.options.map((opt, optIdx) => {
+                      const isUserChoice = selectedOpt === optIdx;
+                      const isRealCorrect = q.correctOptionIndex === optIdx;
+
+                      let bg = 'rgba(255, 255, 255, 0.02)';
+                      let border = '1px solid var(--border-subtle)';
+                      let color = 'var(--text-muted)';
+
+                      if (isRealCorrect) {
+                        bg = 'rgba(16, 185, 129, 0.12)';
+                        border = '1px solid rgba(16, 185, 129, 0.4)';
+                        color = '#34d399';
+                      } else if (isUserChoice && !isCorrect) {
+                        bg = 'rgba(244, 63, 94, 0.12)';
+                        border = '1px solid rgba(244, 63, 94, 0.4)';
+                        color = '#fb7185';
+                      }
+
+                      return (
+                        <div
+                          key={optIdx}
+                          style={{
+                            padding: '6px 8px',
+                            borderRadius: '6px',
+                            background: bg,
+                            border,
+                            fontSize: '11px',
+                            color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between'
+                          }}
+                        >
+                          <span>{String.fromCharCode(65 + optIdx)}. {opt}</span>
+                          {isRealCorrect && <span style={{ fontSize: '9px', fontWeight: 700 }}>✓ Correct</span>}
+                          {isUserChoice && !isCorrect && <span style={{ fontSize: '9px', fontWeight: 700 }}>✗ Your Choice</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Explanation */}
+                  <div
+                    style={{
+                      padding: '6px 8px',
+                      borderRadius: '6px',
+                      background: 'rgba(0, 240, 255, 0.05)',
+                      border: '1px solid rgba(0, 240, 255, 0.15)',
+                      fontSize: '11px',
+                      color: 'var(--text-muted)',
+                      lineHeight: 1.4
+                    }}
+                  >
+                    <strong style={{ color: 'var(--primary-cyan)' }}>Explanation:</strong> {q.explanation}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div style={{ display: 'flex', gap: '10px' }}>
         <button

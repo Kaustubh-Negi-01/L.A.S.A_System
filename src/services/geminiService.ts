@@ -16,6 +16,7 @@ import {
   generateMockStudyPlan,
   generateMockQuiz,
   evaluateMockQuiz,
+  generateMockConceptExplanation,
   generateMockTaskBreakdown,
   generateMockNextAction
 } from './mockData';
@@ -32,13 +33,16 @@ export function getActiveApiKey(customKey?: string, mode: AiMode = 'gemini'): st
   return (typeof envKey === 'string' && envKey.trim().length > 10) ? envKey.trim() : '';
 }
 
-// Clean JSON response from Gemini code blocks
+// Robust Clean JSON response from Gemini code blocks or conversational wrappers
 function cleanJsonResponse(text: string): string {
   let cleaned = text.trim();
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.replace(/^```json/, '').replace(/```$/, '').trim();
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```/, '').replace(/```$/, '').trim();
+  const jsonMatch = cleaned.match(/```json\s*([\s\S]*?)\s*```/) || cleaned.match(/```\s*([\s\S]*?)\s*```/);
+  if (jsonMatch && jsonMatch[1]) {
+    cleaned = jsonMatch[1].trim();
+  }
+  const objectOrArrayMatch = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  if (objectOrArrayMatch) {
+    return objectOrArrayMatch[0].trim();
   }
   return cleaned;
 }
@@ -302,6 +306,7 @@ Return strictly a JSON object matching this schema:
       totalQuestions: parsed.totalQuestions ?? req.questions.length,
       percentage: parsed.percentage ?? Math.round(((parsed.score ?? 0) / (req.questions.length || 1)) * 100),
       userAnswers: req.userAnswers,
+      questions: req.questions,
       weakTopics: parsed.weakTopics || [],
       strengths: parsed.strengths || [],
       adaptiveFeedback: parsed.adaptiveFeedback || 'Good effort! Review weak topics to reinforce concepts.',
@@ -311,6 +316,73 @@ Return strictly a JSON object matching this schema:
   } catch (error) {
     console.warn('Gemini Quiz evaluation failed, falling back to mock:', error);
     return evaluateMockQuiz(req.subject, req.studyPlanId, req.questions, req.userAnswers);
+  }
+}
+
+// --- 4b. AI Concept Explainer ---
+export async function explainConcept(
+  topic: string,
+  subject: string = 'General',
+  customApiKey?: string,
+  aiMode: AiMode = 'gemini'
+): Promise<{
+  topic: string;
+  summary: string;
+  keyPoints: string[];
+  mnemonicOrAnalogy: string;
+  commonPitfall: string;
+  quickCheckQuestion: { question: string; answer: string };
+}> {
+  const apiKey = getActiveApiKey(customApiKey, aiMode);
+
+  if (!apiKey) {
+    return generateMockConceptExplanation(topic, subject);
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompt = `You are L.A.S.A. AI Tutor.
+Provide a crystal-clear, intuitive explanation for this topic:
+Topic: "${topic}"
+Subject Context: "${subject}"
+
+Return strictly a JSON object matching this schema:
+{
+  "topic": "${topic}",
+  "summary": string, // 1-2 crisp sentences defining the concept
+  "keyPoints": string[], // 3 atomic bullet points detailing mechanics or properties
+  "mnemonicOrAnalogy": string, // A vivid real-world analogy or mnemonic to remember it easily
+  "commonPitfall": string, // A frequent student misconception or trap to avoid
+  "quickCheckQuestion": {
+    "question": string,
+    "answer": string
+  }
+}`;
+
+    const result = await model.generateContent(prompt);
+    const responseText = cleanJsonResponse(result.response.text());
+    const parsed = JSON.parse(responseText);
+
+    return {
+      topic: parsed.topic || topic,
+      summary: parsed.summary || `${topic} is an essential topic in ${subject}.`,
+      keyPoints: Array.isArray(parsed.keyPoints) && parsed.keyPoints.length ? parsed.keyPoints : [
+        'Core conceptual structure and rules',
+        'State transitions and computational properties',
+        'Edge case handling and invariants'
+      ],
+      mnemonicOrAnalogy: parsed.mnemonicOrAnalogy || `Think of ${topic} as a structured pipeline maintaining strict order.`,
+      commonPitfall: parsed.commonPitfall || `Watch out for boundary conditions and off-by-one errors.`,
+      quickCheckQuestion: parsed.quickCheckQuestion || {
+        question: `Why is ${topic} important?`,
+        answer: `It provides guaranteed invariants and optimized execution.`
+      }
+    };
+  } catch (error) {
+    console.warn('Gemini concept explanation failed, using fallback:', error);
+    return generateMockConceptExplanation(topic, subject);
   }
 }
 
