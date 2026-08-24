@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { SharedProvider, useSharedContext } from './context/SharedContext';
 import { SmartphoneFrame } from './components/layout/SmartphoneFrame';
+import { ModeSelection, type AppTab } from './components/mode/ModeSelection';
 import { BottomNav } from './components/layout/BottomNav';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { StudyDashboard } from './components/study/StudyDashboard';
@@ -8,22 +9,24 @@ import { VisualHub } from './components/visual/VisualHub';
 import { ProductivityHub } from './components/productivity/ProductivityHub';
 import './App.css';
 
-type AppTab = 'visual' | 'study' | 'productivity';
+
 
 const AppContent: React.FC = () => {
   const { tasks } = useSharedContext();
   const [activeTab, setActiveTab] = useState<AppTab>('visual');
+  const [isModeSelectionOpen, setIsModeSelectionOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const navigateTo = useCallback((nextTab: AppTab) => {
-    if (nextTab === activeTab || isTransitioning) return;
+    if (nextTab === activeTab && !isModeSelectionOpen || isTransitioning) return;
     setIsTransitioning(true);
     window.setTimeout(() => {
       setActiveTab(nextTab);
+      setIsModeSelectionOpen(false);
       window.requestAnimationFrame(() => setIsTransitioning(false));
     }, 120);
-  }, [activeTab, isTransitioning]);
+  }, [activeTab, isModeSelectionOpen, isTransitioning]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -64,8 +67,9 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      <SmartphoneFrame
-        activeTab={activeTab}
+        <SmartphoneFrame
+            activeTab={activeTab}
+            isModeSelection={isModeSelectionOpen}
         onOpenSettings={() => setIsSettingsOpen(true)}
         bottomNav={
           <BottomNav
@@ -76,16 +80,18 @@ const AppContent: React.FC = () => {
         }
       >
         <div className={`screen-view ${isTransitioning ? 'is-leaving' : 'is-entering'}`} key={activeTab}>
-          {activeTab === 'visual' && (
+          {isModeSelectionOpen && <ModeSelection onSelectMode={navigateTo} />}
+
+          {!isModeSelectionOpen && activeTab === 'visual' && (
             <VisualHub
               onNavigateToStudy={() => navigateTo('study')}
               onNavigateToProductivity={() => navigateTo('productivity')}
             />
           )}
 
-          {activeTab === 'study' && <StudyDashboard />}
+          {!isModeSelectionOpen && activeTab === 'study' && <StudyDashboard />}
 
-          {activeTab === 'productivity' && (
+          {!isModeSelectionOpen && activeTab === 'productivity' && (
             <ProductivityHub
               onNavigateToStudy={() => navigateTo('study')}
             />
@@ -96,6 +102,10 @@ const AppContent: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        onSwitchMode={() => {
+          setIsSettingsOpen(false);
+          setIsModeSelectionOpen(true);
+        }}
       />
     </>
   );

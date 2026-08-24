@@ -7,6 +7,7 @@ type Theme = 'dark' | 'light';
 interface SmartphoneFrameProps {
   children: React.ReactNode;
   activeTab: 'visual' | 'study' | 'productivity';
+  isModeSelection?: boolean;
   onOpenSettings: () => void;
   bottomNav: React.ReactNode;
 }
@@ -37,6 +38,7 @@ const getInitialTheme = (): Theme => {
 export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   children,
   activeTab,
+  isModeSelection = false,
   onOpenSettings,
   bottomNav
 }) => {
@@ -108,18 +110,20 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
           </div>
         </header>
 
-        <div className="section-intro">
-          <div>
-            <div className="section-eyebrow">{copy.eyebrow}</div>
-            <h1>{copy.title}</h1>
-            <p>{copy.description}</p>
+        {!isModeSelection && (
+          <div className="section-intro">
+            <div>
+              <div className="section-eyebrow">{copy.eyebrow}</div>
+              <h1>{copy.title}</h1>
+              <p>{copy.description}</p>
+            </div>
           </div>
-        </div>
+        )}
 
         <main className="screen-scroll-container" aria-label={`${copy.title} workspace`}>
           {children}
         </main>
-        {bottomNav}
+        {!isModeSelection && bottomNav}
       </div>
     </div>
   );

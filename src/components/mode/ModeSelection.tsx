@@ -1,0 +1,62 @@
+import { ArrowRight, Eye, GraduationCap, Zap } from 'lucide-react';
+
+export type AppTab = 'visual' | 'study' | 'productivity';
+
+interface ModeSelectionProps {
+  onSelectMode: (mode: AppTab) => void;
+}
+
+const modes = [
+  {
+    id: 'study' as const,
+    label: 'AI Study Coach',
+    supportingText: 'Learn • Practice • Adapt',
+    detail: 'Build momentum with focused study plans and adaptive practice.',
+    icon: GraduationCap,
+    accent: 'violet'
+  },
+  {
+    id: 'visual' as const,
+    label: 'AI Understand & Act',
+    supportingText: 'Scan • Understand • Act',
+    detail: 'Turn documents, notices, and images into clear next steps.',
+    icon: Eye,
+    accent: 'cyan'
+  },
+  {
+    id: 'productivity' as const,
+    label: 'AI Productivity',
+    supportingText: 'Plan • Prioritize • Execute',
+    detail: 'Keep your priorities, tasks, and schedule moving forward.',
+    icon: Zap,
+    accent: 'amber'
+  }
+];
+
+export const ModeSelection: React.FC<ModeSelectionProps> = ({ onSelectMode }) => (
+  <section className="mode-selection" aria-labelledby="mode-selection-title">
+    <div className="mode-selection-intro">
+      <span className="mode-selection-eyebrow">L.A.S.A. / STARTUP</span>
+      <h1 id="mode-selection-title">What mode do you want to use?</h1>
+      <p>Choose an assistant built around what you want to accomplish right now.</p>
+    </div>
+
+    <div className="mode-selection-grid">
+      {modes.map(({ id, label, supportingText, detail, icon: Icon, accent }) => (
+        <button
+          key={id}
+          type="button"
+          className={`mode-option mode-option-${accent}`}
+          onClick={() => onSelectMode(id)}
+        >
+          <span className="mode-option-orbit" aria-hidden="true" />
+          <span className="mode-option-icon"><Icon size={27} strokeWidth={1.8} /></span>
+          <span className="mode-option-label">{label}</span>
+          <span className="mode-option-supporting">{supportingText}</span>
+          <span className="mode-option-detail">{detail}</span>
+          <span className="mode-option-action">Enter mode <ArrowRight size={14} /></span>
+        </button>
+      ))}
+    </div>
+  </section>
+);

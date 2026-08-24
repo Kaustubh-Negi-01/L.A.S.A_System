@@ -5,9 +5,10 @@ import { useSharedContext } from '../../context/SharedContext';
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSwitchMode: () => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSwitchMode }) => {
   const { customApiKey, setCustomApiKey, aiMode, setAiMode, resetToDemoData, tasks, events, studyPlans, quizHistory } = useSharedContext();
   const [inputKey, setInputKey] = useState(customApiKey);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -37,6 +38,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <X size={16} />
           </button>
         </div>
+
+        <button className="switch-mode-action" type="button" onClick={onSwitchMode}>
+          <span>
+            <strong>Switch mode</strong>
+            <small>Return to the L.A.S.A. mode selector</small>
+          </span>
+          <span aria-hidden="true">↗</span>
+        </button>
 
         {/* AI Status Banner */}
         <div

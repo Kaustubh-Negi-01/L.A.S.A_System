@@ -302,3 +302,58 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }
+
+.mode-selection {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  padding: 28px 18px 32px;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(168, 200, 117, 0.1), transparent 38%),
+    var(--bg);
+  animation: modeSelectionEnter 0.42s var(--ease-out) both;
+}
+
+.mode-selection-intro { max-width: 330px; margin: 0 auto; text-align: center; }
+.mode-selection-eyebrow { color: var(--accent); font-family: var(--font-mono); font-size: 9px; font-weight: 800; letter-spacing: 0.16em; }
+.mode-selection-intro h1 { margin-top: 10px; color: var(--text); font-family: var(--font-heading); font-size: clamp(27px, 7vw, 36px); font-weight: 750; letter-spacing: -0.065em; line-height: 0.98; text-transform: uppercase; }
+.mode-selection-intro p { margin: 12px auto 0; color: var(--text-muted); font-size: 11px; line-height: 1.45; }
+.mode-selection-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.mode-option { position: relative; display: flex; min-height: 245px; align-items: center; flex-direction: column; justify-content: flex-start; overflow: hidden; padding: 26px 12px 15px; border: 1px solid var(--line-strong); border-radius: 30px; background: linear-gradient(155deg, var(--surface-raised), var(--surface)); color: var(--text); text-align: center; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+.mode-option:hover, .mode-option:focus-visible { border-color: var(--accent); box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24), 0 0 0 3px var(--accent-soft); outline: none; transform: translateY(-5px); }
+.mode-option:active { transform: translateY(-1px) scale(0.98); }
+.mode-option-orbit { position: absolute; top: -34px; width: 128px; height: 128px; border: 1px solid currentColor; border-radius: 50%; opacity: 0.13; }
+.mode-option-icon { display: grid; width: 58px; height: 58px; place-items: center; border: 1px solid currentColor; border-radius: 50%; background: rgba(255, 255, 255, 0.04); box-shadow: 0 0 28px currentColor; }
+.mode-option-label { margin-top: 17px; font-family: var(--font-heading); font-size: 13px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; text-transform: uppercase; }
+.mode-option-supporting { margin-top: 8px; color: currentColor; font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: 0.03em; line-height: 1.35; }
+.mode-option-detail { margin-top: 11px; color: var(--text-dim); font-size: 9px; line-height: 1.38; }
+.mode-option-action { display: inline-flex; align-items: center; gap: 4px; margin-top: auto; padding-top: 12px; color: var(--text-muted); font-size: 9px; font-weight: 800; }
+.mode-option-violet { color: #c8a4dc; }
+.mode-option-cyan { color: #a8c875; }
+.mode-option-amber { color: #e2bd79; }
+
+.switch-mode-action { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 12px 14px; border: 1px solid rgba(168, 200, 117, 0.42); border-radius: 7px; background: var(--accent-soft); color: var(--accent-strong); text-align: left; transition: background 0.16s ease, transform 0.16s ease; }
+.switch-mode-action:hover { background: rgba(168, 200, 117, 0.2); transform: translateY(-1px); }
+.switch-mode-action strong, .switch-mode-action small { display: block; }
+.switch-mode-action strong { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.switch-mode-action small { margin-top: 4px; color: var(--text-muted); font-size: 10px; }
+
+@keyframes modeSelectionEnter { from { opacity: 0; transform: translateY(12px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+@media (max-width: 390px) {
+  .mode-selection { gap: 20px; padding: 22px 14px 26px; }
+  .mode-selection-grid { grid-template-columns: 1fr; gap: 10px; }
+  .mode-option { min-height: 144px; align-items: flex-start; padding: 17px 18px 14px 78px; border-radius: 22px; text-align: left; }
+  .mode-option-orbit { top: -40px; left: -24px; }
+  .mode-option-icon { position: absolute; top: 20px; left: 18px; width: 47px; height: 47px; }
+  .mode-option-label { margin-top: 1px; font-size: 12px; }
+  .mode-option-supporting { margin-top: 6px; }
+  .mode-option-detail { margin-top: 7px; }
+  .mode-option-action { padding-top: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-selection { animation: none; }
+}
