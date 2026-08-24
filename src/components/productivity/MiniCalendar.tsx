@@ -38,7 +38,8 @@ export const MiniCalendar: React.FC = () => {
           <span>Extracted Schedule & Calendar</span>
         </div>
         <button
-          className="icon-btn"
+          type="button"
+          className={`icon-btn calendar-add-button ${isAdding ? 'is-open' : ''}`}
           onClick={() => setIsAdding(!isAdding)}
           style={{ width: '28px', height: '28px' }}
           title="Add Event"
@@ -129,6 +130,7 @@ export const MiniCalendar: React.FC = () => {
         ) : events.map(event => (
           <div
             key={event.id}
+            className="calendar-event"
             style={{
               padding: '10px 12px',
               borderRadius: '5px',
@@ -180,6 +182,7 @@ export const MiniCalendar: React.FC = () => {
                   <CalendarIcon size={12} color="var(--primary-cyan)" />
                 </a>
                 <button
+                  type="button"
                   onClick={() => deleteEvent(event.id)}
                   className="icon-btn"
                   style={{ width: '24px', height: '24px', padding: 0 }}

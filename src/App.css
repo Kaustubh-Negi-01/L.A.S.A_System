@@ -1154,3 +1154,258 @@ a,
     animation: none;
   }
 }
+
+
+/* Focused micro-interaction polish */
+
+.modal-backdrop.is-closing {
+  pointer-events: none;
+  animation: modal-backdrop-out 160ms ease-in both;
+}
+
+.modal-backdrop.is-closing .modal-sheet {
+  animation: modal-sheet-out 160ms var(--ease-in-out) both;
+}
+
+.modal-sheet {
+  will-change: transform, opacity;
+}
+
+.icon-btn:not(:disabled):active svg,
+.btn-primary:not(:disabled):active svg,
+.btn-secondary:not(:disabled):active svg,
+.btn-purple:not(:disabled):active svg {
+  transform: scale(.88);
+}
+
+.icon-btn svg,
+.btn-primary svg,
+.btn-secondary svg,
+.btn-purple svg {
+  transition: transform 150ms var(--ease-out), color 160ms ease;
+}
+
+.scanner-source-tile {
+  position: relative;
+  overflow: hidden;
+  transition: transform 150ms var(--ease-out), border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease !important;
+}
+
+.scanner-source-tile:hover,
+.scanner-source-tile:focus-visible {
+  border-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .12);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.scanner-source-tile:active {
+  transform: scale(.98);
+}
+
+.scanner-source-tile svg {
+  transition: transform 180ms var(--ease-out), color 180ms ease;
+}
+
+.scanner-source-tile:hover svg,
+.scanner-source-tile:focus-visible svg {
+  transform: translateY(-2px) scale(1.06);
+}
+
+.scanner-preset {
+  position: relative;
+  overflow: hidden;
+  transition: transform 150ms var(--ease-out), border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease !important;
+}
+
+.scanner-preset:hover,
+.scanner-preset:focus-visible {
+  border-color: var(--accent) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .1);
+  outline: none;
+  transform: translateX(2px);
+}
+
+.scanner-preset:active {
+  transform: scale(.985);
+}
+
+.scanner-preset.is-selected {
+  box-shadow: 0 0 0 3px var(--accent-soft), 0 8px 18px rgba(0, 0, 0, .12);
+}
+
+.scanner-preset svg {
+  transition: transform 180ms var(--ease-out), color 180ms ease;
+}
+
+.scanner-preset.is-selected svg {
+  transform: scale(1.06);
+}
+
+.scanner-camera-preview {
+  animation: content-card-in 220ms var(--ease-out) both;
+}
+
+.scanner-error-banner {
+  padding: 8px 10px;
+  border: 1px solid rgba(229, 130, 130, .24);
+  border-radius: var(--radius-sm);
+  background: rgba(229, 130, 130, .08);
+  animation: feedback-in 220ms var(--ease-out) both;
+}
+
+.scanner-ready-state {
+  animation: ready-state-in 260ms var(--ease-out) both;
+}
+
+.scanner-ready-state img {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms ease;
+}
+
+.scanner-ready-state:hover img {
+  transform: scale(1.015);
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 8px 20px rgba(0, 0, 0, .16);
+}
+
+.milestone-toggle,
+.quiz-history-item {
+  transition: transform 150ms var(--ease-out), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.milestone-toggle:hover,
+.milestone-toggle:focus-visible,
+.quiz-history-item:hover,
+.quiz-history-item:focus-visible {
+  border-radius: var(--radius-sm);
+  outline: none;
+  transform: translateX(2px);
+}
+
+.milestone-toggle:focus-visible,
+.quiz-history-item:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.milestone-toggle svg,
+.quiz-history-item svg {
+  transition: transform 180ms var(--ease-out), color 180ms ease;
+}
+
+.milestone-toggle:hover svg,
+.milestone-toggle:focus-visible svg,
+.quiz-history-item:hover svg,
+.quiz-history-item:focus-visible svg {
+  transform: scale(1.08);
+}
+
+.task-step-row[aria-pressed='true'] {
+  border-color: rgba(168, 200, 117, .3);
+  background: var(--accent-soft);
+}
+
+.task-step-row[aria-pressed='true'] svg,
+.task-complete-control[aria-pressed='true'] svg {
+  animation: state-icon-confirm 260ms var(--ease-out) both;
+}
+
+.calendar-event {
+  transition: transform 150ms var(--ease-out), border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.calendar-event:hover {
+  border-color: var(--line-strong) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .1);
+  transform: translateY(-1px);
+}
+
+.quick-toggle[aria-pressed='true'] svg,
+.system-widget.is-running .widget-icon {
+  animation: state-icon-confirm 260ms var(--ease-out) both;
+}
+
+@keyframes modal-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes modal-sheet-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(12px); }
+}
+
+@keyframes ready-state-in {
+  from { opacity: 0; transform: translateY(4px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes state-icon-confirm {
+  0% { transform: scale(.86); }
+  65% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanner-source-tile,
+  .scanner-preset,
+  .scanner-camera-preview,
+  .scanner-error-banner,
+  .scanner-ready-state,
+  .modal-backdrop.is-closing,
+  .modal-backdrop.is-closing .modal-sheet,
+  .task-step-row[aria-pressed='true'] svg,
+  .task-complete-control[aria-pressed='true'] svg,
+  .quick-toggle[aria-pressed='true'] svg,
+  .system-widget.is-running .widget-icon {
+    animation: none;
+    transition: none;
+  }
+
+  .scanner-source-tile:hover,
+  .scanner-source-tile:focus-visible,
+  .scanner-preset:hover,
+  .scanner-preset:focus-visible,
+  .milestone-toggle:hover,
+  .milestone-toggle:focus-visible,
+  .quiz-history-item:hover,
+  .quiz-history-item:focus-visible,
+  .calendar-event:hover {
+    transform: none;
+  }
+}
+
+
+.calendar-add-button svg {
+  transition: transform 180ms var(--ease-out);
+}
+
+.calendar-add-button.is-open svg {
+  transform: rotate(45deg);
+}
+
+.mini-action-button {
+  transition: transform 140ms var(--ease-out), filter 160ms ease, background-color 160ms ease, border-color 160ms ease !important;
+}
+
+.mini-action-button:hover,
+.mini-action-button:focus-visible {
+  filter: brightness(1.08);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.mini-action-button:active {
+  transform: scale(.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-add-button svg,
+  .mini-action-button {
+    transition: none !important;
+  }
+
+  .calendar-add-button.is-open svg {
+    transform: none;
+  }
+}

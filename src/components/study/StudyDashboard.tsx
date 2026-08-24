@@ -32,9 +32,15 @@ export const StudyDashboard: React.FC = () => {
 
   const activePlan = studyPlans.find(p => p.id === activeStudyPlanId) || studyPlans[0];
 
-  const handleStartQuiz = (topic: string) => {
+    const handleStartQuiz = (topic: string) => {
     setSelectedTopicForQuiz(topic);
     setViewState('quiz');
+  };
+
+  const handleMilestoneKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, planId: string, day: number) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    toggleMilestone(planId, day);
   };
 
   const handleFinishQuiz = (result: QuizResult) => {
@@ -258,7 +264,12 @@ export const StudyDashboard: React.FC = () => {
                   }}
                 >
                   <div
+                    className="milestone-toggle"
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={m.completed}
                     onClick={() => toggleMilestone(activePlan.id, m.day)}
+                    onKeyDown={event => handleMilestoneKeyDown(event, activePlan.id, m.day)}
                     style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1, cursor: 'pointer' }}
                   >
                     {m.completed ? (
@@ -285,8 +296,11 @@ export const StudyDashboard: React.FC = () => {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <button
+                      type="button"
+                      className="mini-action-button"
                       onClick={() => setExplainingTopic(m.topic)}
                       title="Explain Concept with AI"
+                      data-feedback="open"
                       style={{
                         padding: '4px 8px',
                         borderRadius: '4px',
@@ -304,8 +318,11 @@ export const StudyDashboard: React.FC = () => {
                       Explain
                     </button>
                     <button
+                      type="button"
+                      className="mini-action-button"
                       onClick={() => handleStartQuiz(m.topic)}
                       title="Test this topic"
+                      data-feedback="open"
                       style={{
                         padding: '4px 8px',
                         borderRadius: '4px',
@@ -356,7 +373,16 @@ export const StudyDashboard: React.FC = () => {
             {quizHistory.slice(-3).reverse().map((q, idx) => (
               <div
                 key={idx}
+                className="quiz-history-item"
+                role="button"
+                tabIndex={0}
                 onClick={() => {
+                  setLastQuizResult(q);
+                  setViewState('analysis');
+                }}
+                onKeyDown={event => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return;
+                  event.preventDefault();
                   setLastQuizResult(q);
                   setViewState('analysis');
                 }}

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Key, ShieldCheck, Cpu, Database, RefreshCw, CheckCircle } from 'lucide-react';
 import { useSharedContext } from '../../context/SharedContext';
+
+const MODAL_EXIT_MS = 180;
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -14,7 +16,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [showJson, setShowJson] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem('lasa-sound') !== 'off');
-  const [hapticsEnabled, setHapticsEnabled] = useState(() => localStorage.getItem('lasa-haptics') !== 'off');
+    const [hapticsEnabled, setHapticsEnabled] = useState(() => localStorage.getItem('lasa-haptics') !== 'off');
+  const [isClosing, setIsClosing] = useState(false);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+
+    if (!shouldRender) return;
+    setIsClosing(true);
+    const timeoutId = window.setTimeout(() => {
+      setShouldRender(false);
+      setIsClosing(false);
+    }, MODAL_EXIT_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen, shouldRender]);
+
+  const closeWithMotion = (afterClose: () => void = onClose) => {
+    if (isClosing) return;
+    setIsClosing(true);
+    window.setTimeout(() => {
+      setShouldRender(false);
+      setIsClosing(false);
+      afterClose();
+    }, MODAL_EXIT_MS);
+  };
 
   const updatePreference = (key: 'lasa-sound' | 'lasa-haptics', enabled: boolean) => {
     localStorage.setItem(key, enabled ? 'on' : 'off');
@@ -23,7 +53,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     window.dispatchEvent(new CustomEvent('lasa-feedback', { detail: { kind: 'tap', intensity: 'light' } }));
   };
 
-  if (!isOpen) return null;
+    if (!shouldRender) return null;
 
   const handleSave = () => {
     setCustomApiKey(inputKey.trim());
@@ -34,7 +64,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const isKeyActive = aiMode === 'gemini' && Boolean(customApiKey || import.meta.env.VITE_GEMINI_API_KEY);
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className={`modal-backdrop ${isClosing ? 'is-closing' : ''}`} onClick={() => closeWithMotion()}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="modal-handle" />
 
@@ -43,12 +73,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <Cpu size={18} color="#d08a67" />
             <span>Assistant Settings & AI Config</span>
           </div>
-          <button className="icon-btn" onClick={onClose}>
+                    <button className="icon-btn" onClick={() => closeWithMotion()} aria-label="Close settings">
+
             <X size={16} />
           </button>
         </div>
 
-        <button className="switch-mode-action" type="button" onClick={onSwitchMode}>
+        <button className="switch-mode-action" type="button" onClick={() => closeWithMotion(onSwitchMode)}>
           <span>
             <strong>Switch mode</strong>
             <small>Return to the L.A.S.A. mode selector</small>

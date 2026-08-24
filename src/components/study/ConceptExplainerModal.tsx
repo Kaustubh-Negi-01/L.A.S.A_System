@@ -23,6 +23,34 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
   const [data, setData] = useState<ConceptExplanation | null>(null);
   const [loading, setLoading] = useState(true);
   const [showQuickAnswer, setShowQuickAnswer] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+
+    if (!shouldRender) return;
+    setIsClosing(true);
+    const timeoutId = window.setTimeout(() => {
+      setShouldRender(false);
+      setIsClosing(false);
+    }, 180);
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen, shouldRender]);
+
+  const closeWithMotion = (afterClose: () => void = onClose) => {
+    if (isClosing) return;
+    setIsClosing(true);
+    window.setTimeout(() => {
+      setShouldRender(false);
+      setIsClosing(false);
+      afterClose();
+    }, 180);
+  };
 
   useEffect(() => {
     if (!isOpen || !topic) return;
@@ -47,10 +75,10 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
     };
   }, [topic, subject, isOpen, customApiKey, aiMode]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className={`modal-backdrop ${isClosing ? 'is-closing' : ''}`} onClick={() => closeWithMotion()}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '90%' }}>
         <div className="modal-handle" />
 
@@ -59,7 +87,7 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
             <Lightbulb size={18} color="#00f0ff" />
             <span>AI Concept Explainer</span>
           </div>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
+          <button className="icon-btn" onClick={() => closeWithMotion()} aria-label="Close concept explainer">
             <X size={16} />
           </button>
         </div>
@@ -182,10 +210,7 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
             {/* Action Button: Test with Quiz */}
             <button
               className="btn-primary"
-              onClick={() => {
-                onClose();
-                onLaunchQuiz(topic);
-              }}
+              onClick={() => closeWithMotion(() => onLaunchQuiz(topic))}
               style={{ width: '100%', padding: '12px', fontSize: '13px' }}
             >
               <PlayCircle size={16} />
