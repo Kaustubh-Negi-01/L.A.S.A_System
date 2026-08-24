@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Wifi, BatteryMedium, Sparkles, Settings as SettingsIcon, RotateCcw, CircleCheck, Sun, Moon } from 'lucide-react';
 import { useSharedContext } from '../../context/SharedContext';
 
@@ -46,6 +46,9 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   const [currentTime, setCurrentTime] = useState<string>('09:41');
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [isResetting, setIsResetting] = useState(false);
+  const [isHaptic, setIsHaptic] = useState(false);
+  const [feedbackPoint, setFeedbackPoint] = useState<{ x: number; y: number; key: number } | null>(null);
+  const phoneRef = useRef<HTMLDivElement>(null);
   const copy = sectionCopy[activeTab];
   const isLive = aiMode === 'gemini' && Boolean(customApiKey || import.meta.env.VITE_GEMINI_API_KEY);
 
@@ -61,6 +64,22 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   };
 
   useEffect(() => {
+    const onFeedback = (event: Event) => {
+      if (localStorage.getItem('lasa-haptics') === 'off') return;
+      const detail = (event as CustomEvent<{ clientX?: number; clientY?: number }>).detail;
+      const rect = phoneRef.current?.getBoundingClientRect();
+      if (rect && typeof detail?.clientX === 'number' && typeof detail?.clientY === 'number') {
+        setFeedbackPoint({ x: detail.clientX - rect.left, y: detail.clientY - rect.top, key: Date.now() });
+      }
+      setIsHaptic(true);
+      window.setTimeout(() => setIsHaptic(false), 180);
+      window.setTimeout(() => setFeedbackPoint(null), 520);
+    };
+    window.addEventListener('lasa-feedback', onFeedback);
+    return () => window.removeEventListener('lasa-feedback', onFeedback);
+  }, []);
+
+  useEffect(() => {
     const update = () => {
       const now = new Date();
       setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
@@ -72,7 +91,8 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
 
   return (
     <div className="app-wrapper">
-      <div className="phone-frame">
+      <div className={`phone-frame ${isHaptic ? 'is-haptic' : ''}`} ref={phoneRef}>
+        {feedbackPoint && <span key={feedbackPoint.key} className="feedback-ripple" style={{ left: feedbackPoint.x, top: feedbackPoint.y }} aria-hidden="true" />}
         <div className="phone-status-bar">
           <span className="status-time">{currentTime}</span>
           <div className="dynamic-island-notch" title={isLive ? 'Gemini connected' : 'Local simulation engine'}>
@@ -101,7 +121,7 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
               {isLive ? 'Live' : 'Local'}
             </span>
             <button
-              className="icon-btn"
+              className="icon-btn theme-toggle"
               onClick={() => setTheme(current => current === 'dark' ? 'light' : 'dark')}
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}

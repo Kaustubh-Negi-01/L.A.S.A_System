@@ -8,10 +8,13 @@ import { StudyDashboard } from './components/study/StudyDashboard';
 import { VisualHub } from './components/visual/VisualHub';
 import { ProductivityHub } from './components/productivity/ProductivityHub';
 import './App.css';
-
+import { installInteractionSoundBridge, useInteractionFeedback } from './hooks/useInteractionFeedback';
 
 
 const AppContent: React.FC = () => {
+  useInteractionFeedback();
+
+  useEffect(() => installInteractionSoundBridge(), []);
   const { tasks } = useSharedContext();
   const [activeTab, setActiveTab] = useState<AppTab>('visual');
   const [isModeSelectionOpen, setIsModeSelectionOpen] = useState(true);

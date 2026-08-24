@@ -13,6 +13,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [inputKey, setInputKey] = useState(customApiKey);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [showJson, setShowJson] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem('lasa-sound') !== 'off');
+  const [hapticsEnabled, setHapticsEnabled] = useState(() => localStorage.getItem('lasa-haptics') !== 'off');
+
+  const updatePreference = (key: 'lasa-sound' | 'lasa-haptics', enabled: boolean) => {
+    localStorage.setItem(key, enabled ? 'on' : 'off');
+    if (key === 'lasa-sound') setSoundEnabled(enabled);
+    if (key === 'lasa-haptics') setHapticsEnabled(enabled);
+    window.dispatchEvent(new CustomEvent('lasa-feedback', { detail: { kind: 'tap', intensity: 'light' } }));
+  };
 
   if (!isOpen) return null;
 
@@ -129,6 +138,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               style={{ padding: '8px 10px', fontSize: '12px' }}
             >
               Demo Simulation
+            </button>
+          </div>
+        </div>
+
+        <div className="glass-panel feedback-preferences">
+          <div>
+            <div className="feedback-preferences-title">Interface feedback</div>
+            <div className="feedback-preferences-copy">Small sounds and tactile flashes make actions feel physical.</div>
+          </div>
+          <div className="feedback-preferences-controls">
+            <button
+              type="button"
+              className={`feedback-toggle ${soundEnabled ? 'is-on' : ''}`}
+              aria-pressed={soundEnabled}
+              onClick={() => updatePreference('lasa-sound', !soundEnabled)}
+            >
+              <span className="feedback-toggle-dot" aria-hidden="true" />
+              Sound cues
+            </button>
+            <button
+              type="button"
+              className={`feedback-toggle ${hapticsEnabled ? 'is-on' : ''}`}
+              aria-pressed={hapticsEnabled}
+              onClick={() => updatePreference('lasa-haptics', !hapticsEnabled)}
+            >
+              <span className="feedback-toggle-dot" aria-hidden="true" />
+              Visual haptics
             </button>
           </div>
         </div>

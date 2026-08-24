@@ -247,6 +247,7 @@ export const TaskList: React.FC = () => {
                     className="task-complete-control"
                     onClick={() => handleToggleTask(task)}
                     aria-label={isCompleted ? `Reopen task: ${task.title}` : `Complete task: ${task.title}`}
+                    data-feedback={isCompleted ? 'open' : 'success'}
                     aria-pressed={isCompleted}
                   >
                     {isCompleted ? (
