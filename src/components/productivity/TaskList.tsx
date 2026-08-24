@@ -225,15 +225,20 @@ export const TaskList: React.FC = () => {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
-                <div
-                  onClick={() => updateTask(task.id, { status: isCompleted ? 'in-progress' : 'completed' })}
-                  style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1, cursor: 'pointer' }}
-                >
-                  {isCompleted ? (
-                    <CheckCircle2 size={18} color="#a6b27b" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  ) : (
-                    <Circle size={18} color={task.priority === 'high' ? '#e39485' : '#7f746d'} style={{ flexShrink: 0, marginTop: '2px' }} />
-                  )}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1 }}>
+                  <button
+                    type="button"
+                    className="task-complete-control"
+                    onClick={() => updateTask(task.id, { status: isCompleted ? 'in-progress' : 'completed' })}
+                    aria-label={isCompleted ? `Reopen task: ${task.title}` : `Complete task: ${task.title}`}
+                    aria-pressed={isCompleted}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle2 size={18} color="#a6b27b" />
+                    ) : (
+                      <Circle size={18} color={task.priority === 'high' ? '#e39485' : '#7f746d'} />
+                    )}
+                  </button>
 
                   <div>
                     <div
@@ -340,18 +345,13 @@ export const TaskList: React.FC = () => {
                   </div>
 
                   {task.steps.map(step => (
-                    <div
+                    <button
+                      type="button"
                       key={step.id}
+                      className="task-step-row"
                       onClick={() => toggleTaskStep(task.id, step.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 8px',
-                        borderRadius: '3px',
-                        background: 'var(--surface-muted)',
-                        cursor: 'pointer'
-                      }}
+                      aria-label={step.isCompleted ? `Reopen step: ${step.title}` : `Complete step: ${step.title}`}
+                      aria-pressed={step.isCompleted}
                     >
                       {step.isCompleted ? (
                         <CheckCircle2 size={14} color="#a6b27b" />
@@ -367,7 +367,7 @@ export const TaskList: React.FC = () => {
                       >
                         {step.title}
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}

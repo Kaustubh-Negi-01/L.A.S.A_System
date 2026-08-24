@@ -42,6 +42,7 @@ export const MiniCalendar: React.FC = () => {
           onClick={() => setIsAdding(!isAdding)}
           style={{ width: '28px', height: '28px' }}
           title="Add Event"
+          aria-label="Add calendar event"
         >
           <Plus size={14} />
         </button>
@@ -118,8 +119,14 @@ export const MiniCalendar: React.FC = () => {
         </form>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {events.map(event => (
+      <div className="calendar-event-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {events.length === 0 ? (
+          <div className="calendar-empty-state">
+            <CalendarIcon size={18} />
+            <strong>No events yet</strong>
+            <span>Scan a notice or add a date to keep it in view.</span>
+          </div>
+        ) : events.map(event => (
           <div
             key={event.id}
             style={{
@@ -168,7 +175,7 @@ export const MiniCalendar: React.FC = () => {
                   className="icon-btn"
                   style={{ width: '24px', height: '24px', padding: 0 }}
                   title="Add to Google Calendar"
-                  aria-label="Add to Google Calendar"
+                  aria-label={`Add ${event.title} to Google Calendar`}
                 >
                   <CalendarIcon size={12} color="var(--primary-cyan)" />
                 </a>
@@ -177,7 +184,7 @@ export const MiniCalendar: React.FC = () => {
                   className="icon-btn"
                   style={{ width: '24px', height: '24px', padding: 0 }}
                   title="Delete Event"
-                  aria-label="Delete Event"
+                  aria-label={`Delete event: ${event.title}`}
                 >
                   <Trash2 size={12} color="#d27568" />
                 </button>

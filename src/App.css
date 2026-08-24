@@ -357,3 +357,62 @@
 @media (prefers-reduced-motion: reduce) {
   .mode-selection { animation: none; }
 }
+
+.task-complete-control {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: center;
+  width: 22px;
+  min-height: 22px;
+  padding: 1px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+
+.task-complete-control:hover {
+  border-color: rgba(168, 200, 117, 0.35);
+  background: rgba(168, 200, 117, 0.12);
+}
+
+.task-step-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: var(--surface-muted);
+  color: var(--text);
+  text-align: left;
+}
+
+.task-step-row:hover {
+  border-color: var(--line);
+  background: var(--surface-raised);
+}
+
+.task-step-row:focus-visible,
+.task-complete-control:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+.calendar-empty-state {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+  padding: 18px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 7px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.calendar-empty-state svg { color: var(--accent); }
+.calendar-empty-state strong { color: var(--text); font-size: 11px; }
+.calendar-empty-state span { max-width: 230px; color: var(--text-dim); font-size: 9px; line-height: 1.45; }
