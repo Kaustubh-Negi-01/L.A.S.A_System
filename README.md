@@ -94,7 +94,7 @@ The result is a simple loop: **capture → understand → plan → practice → 
 1. Start at the mode selector and notice that the interface is presented as a smartphone rather than a traditional web dashboard.
 2. Enter **Understand & Act** and inspect the preloaded exam circular. The prototype surfaces the date, time, location, and extracted action items.
 3. Use the one-touch dispatch action. In the intended product flow, the extracted information becomes connected schedule, study, and productivity context.
-4. Open **Study Coach**. Review the adaptive plan, start the quiz, and select an answer to see the learning interaction.
+4. Open **Study Coach**. Review the adaptive plan, open a concept explanation, flip through the active-recall flashcards, then take the six-question diagnostic quiz and inspect the mistake-driven recovery path.
 5. Open **Productivity**. Review the recommended next action, task filters, completion interaction, and calendar items.
 6. Open **Settings** to see the execution strategy, local feedback controls, reset action, and shared-context inspector. Use **SWITCH MODE** to return to the selector.
 7. On a touch device, try horizontal workspace swipes and the bottom gesture area. The prototype also includes a lock-screen and notification-shade concept for demonstrating how the assistant could become part of a phone-level experience.
@@ -109,7 +109,7 @@ The multimodal scanner experience demonstrates how an image or document can be t
 
 ### Study Coach
 
-The Study Coach presents a multi-day plan, daily milestones, weak-topic context, and a short diagnostic quiz. Selecting an answer updates the quiz state, and the existing flow is designed to support follow-up adaptation rather than treating a quiz as a disconnected form.
+The Study Coach presents an adaptive multi-day plan whose milestones combine concept explanation, active-recall flashcards, worked examples, application practice, and self-checks. Its six-question diagnostic quiz mixes foundational reasoning, application, edge cases, trade-offs, teach-back, and remediation. After submission, the prototype preserves each question and explanation, identifies weak topics, adds a recovery milestone, and creates a task whose steps lead through explanation, flashcard recall, practice, and a changed-scenario retest.
 
 ### Productivity Coach
 
@@ -156,8 +156,10 @@ Browser phone shell
 │   └── Cross-mode dispatch
 ├── Study Coach
 │   ├── Adaptive study plan
-│   ├── Diagnostic quiz
-│   └── Weak-topic feedback
+│   ├── Concept teaching and worked examples
+│   ├── Active-recall flashcards
+│   ├── Six-question diagnostic quiz
+│   └── Weak-topic recovery and retest
 ├── Productivity Coach
 │   ├── Recommendation
 │   ├── Task and sub-step management

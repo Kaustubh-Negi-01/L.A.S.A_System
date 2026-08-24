@@ -1,4 +1,4 @@
-import { SharedAppState, Task, ExtractedEvent, StudyPlan, QuizResult, VisualScanResult, QuizQuestion, NextActionRecommendation } from '../types';
+import { SharedAppState, Task, ExtractedEvent, StudyPlan, QuizResult, VisualScanResult, QuizQuestion, NextActionRecommendation, ConceptExplanation } from '../types';
 
 export const initialDemoState: SharedAppState = {
   customApiKey: '',
@@ -285,7 +285,7 @@ export function generateMockStudyPlan(
   const milestones = chosenTopics.slice(0, Math.min(daysDiff, 5)).map((topic, idx) => ({
     day: idx + 1,
     topic,
-    focusArea: `Key concept mastery, practice MCQs, and real-world edge case drills for ${topic}.`,
+    focusArea: `Explain ${topic}, build active-recall flashcards, trace a worked example, then complete targeted application MCQs and an edge-case check.`,
     estimatedMinutes: dailyMinutes,
     completed: false
   }));
@@ -305,46 +305,99 @@ export function generateMockStudyPlan(
 }
 
 export function generateMockQuiz(subject: string, topic: string): QuizQuestion[] {
+  const stamp = Date.now();
   return [
     {
-      id: `q-${Date.now()}-1`,
-      question: `In ${topic}, which approach ensures optimal time complexity under average conditions?`,
+      id: `q-${stamp}-1`,
+      question: `Which statement best captures the core mechanism of ${topic}?`,
       options: [
-        'Divide and Conquer with memoized state caching',
-        'Brute-force iterative search across all permutations',
-        'Greedy selection without local heuristics',
-        'Randomized permutation sampling'
+        `It preserves a useful invariant while reducing the remaining work`,
+        'It always examines every possible state before returning',
+        'It removes the need to define input and output conditions',
+        'It trades correctness for a faster average result'
       ],
       correctOptionIndex: 0,
-      explanation: 'Divide and conquer combined with memoization avoids redundant sub-problem calculations, guaranteeing optimal polynomial time.',
+      explanation: `The strongest mental model for ${topic} is the invariant it preserves and how that invariant reduces future work. The other choices confuse exhaustive search, vague specifications, or approximation with the actual mechanism.`,
       topicTag: topic
     },
     {
-      id: `q-${Date.now()}-2`,
-      question: `What is a critical edge-case vulnerability or pitfall when managing ${topic}?`,
+      id: `q-${stamp}-2`,
+      question: `A solution for ${topic} works on normal inputs but fails at a boundary. What should you inspect first?`,
       options: [
-        'Excessive memory locality causing cache thrashing',
-        'Unbounded recursive depth causing Stack Overflow',
-        'Integer underflow on 64-bit platforms',
-        'Strictly monotonic pointer convergence'
+        'Whether the interface uses a newer visual theme',
+        'Base cases, empty input, and inclusive versus exclusive bounds',
+        'Whether the code has enough comments',
+        'Whether the variable names are longer than eight characters'
       ],
       correctOptionIndex: 1,
-      explanation: 'Unbounded recursion without tail-call optimization or base-case bounds risks overflowing the execution stack.',
-      topicTag: `${topic} Safety`
+      explanation: 'Boundary failures usually come from an incomplete base case or an off-by-one assumption. Test the smallest valid input, the largest relevant boundary, and an empty case before changing the overall strategy.',
+      topicTag: `${topic} Edge Cases`
     },
     {
-      id: `q-${Date.now()}-3`,
-      question: `When evaluating system performance in ${topic}, which metric indicates highest efficiency?`,
+      id: `q-${stamp}-3`,
+      question: `You must apply ${topic} to a dataset twice as large. Which reasoning is most useful before coding?`,
       options: [
-        'O(N^2) quadratic space allocation',
-        'Amortized O(1) or logarithmic O(log N) operations',
-        'Linear scan with O(N!) factorial worst-case',
-        'Arbitrary busy-waiting spinlocks'
+        'Choose the shortest implementation regardless of complexity',
+        'Estimate time and space growth, then trace one representative example',
+        'Assume the average case is always the worst case',
+        'Add random retries so failures become less visible'
       ],
       correctOptionIndex: 1,
-      explanation: 'Amortized constant time O(1) or logarithmic O(log N) represents high scalability and low latency.',
-      topicTag: `${topic} Complexity`
+      explanation: 'Scaling decisions require both a growth estimate and a concrete trace. The trace exposes state transitions, while complexity analysis predicts whether the approach remains practical.',
+      topicTag: `${topic} Application`
+    },
+    {
+      id: `q-${stamp}-4`,
+      question: `What is the most important trade-off to explain when comparing two approaches to ${topic}?`,
+      options: [
+        'Only which one uses fewer lines of code',
+        'Correctness conditions, runtime growth, memory use, and failure modes',
+        'Only which one looks more familiar at first glance',
+        'Whether both approaches use the same variable names'
+      ],
+      correctOptionIndex: 1,
+      explanation: 'A meaningful comparison connects correctness to resource use and failure modes. Conciseness or familiarity alone does not show that an approach is appropriate for the constraints.',
+      topicTag: `${topic} Trade-offs`
+    },
+    {
+      id: `q-${stamp}-5`,
+      question: `Which explanation would teach ${topic} most effectively to someone who keeps memorizing steps without understanding them?`,
+      options: [
+        'List every API name without an example',
+        'Give the invariant, walk through a small example, then test an edge case',
+        'Ask them to repeat the definition ten times',
+        'Skip the explanation and show only the final output'
+      ],
+      correctOptionIndex: 1,
+      explanation: 'Teaching becomes transferable when the learner sees the invariant operate on a concrete example and then predicts what changes at an edge case. That sequence checks understanding rather than recognition.',
+      topicTag: `${topic} Teach-back`
+    },
+    {
+      id: `q-${stamp}-6`,
+      question: `After missing a ${topic} question, which next step is most likely to improve retention?`,
+      options: [
+        'Immediately retake the same question until the option feels familiar',
+        'Review the explanation, write a one-sentence rule, and retry a changed scenario',
+        'Avoid the topic and spend the session on already-mastered material',
+        'Read a longer answer without attempting retrieval'
+      ],
+      correctOptionIndex: 1,
+      explanation: 'Mistake-driven remediation should make the learner retrieve the rule and apply it to a new scenario. Repeating the same option can create recognition without durable understanding.',
+      topicTag: `${topic} Remediation`
     }
+  ];
+}
+
+export function generateMockFlashcards(subject: string, topics: string[]): { id: string; front: string; back: string; topic: string; difficulty: 'foundation' | 'application' | 'challenge' }[] {
+  const topic = topics[0] || subject;
+  const secondary = topics[1] || `${subject} fundamentals`;
+  return [
+    { id: `card-${Date.now()}-1`, front: `What is the core idea behind ${topic}?`, back: `${topic} is the central mechanism to understand before solving problems. Define its invariant, the operations it supports, and the trade-off it introduces.`, topic, difficulty: 'foundation' },
+    { id: `card-${Date.now()}-2`, front: `Which invariant must remain true in ${topic}?`, back: `State the rule that must hold after every operation. Use a small example to check the invariant rather than memorizing a definition alone.`, topic, difficulty: 'foundation' },
+    { id: `card-${Date.now()}-3`, front: `How would you apply ${topic} to a new problem?`, back: `Identify the input, choose the operation that reduces the problem, trace one concrete example, and verify the result against the expected complexity.`, topic, difficulty: 'application' },
+    { id: `card-${Date.now()}-4`, front: `What edge case commonly breaks solutions for ${secondary}?`, back: `Check empty input, boundary values, repeated values, and the worst-case path. Explain which guard or base case prevents the failure.`, topic: secondary, difficulty: 'application' },
+    { id: `card-${Date.now()}-5`, front: `Compare the efficient and naive approaches to ${topic}.`, back: `The efficient approach avoids repeated work or preserves a useful invariant; the naive approach repeatedly scans or recomputes state. Explain the difference in time and space costs.`, topic, difficulty: 'challenge' },
+    { id: `card-${Date.now()}-6`, front: `Teach ${topic} in two sentences to a classmate.`, back: `Start with the mental model, then name the operation and its trade-off. If you cannot explain the edge case, return to the relevant milestone and practice one worked example.`, topic, difficulty: 'challenge' }
   ];
 }
 
@@ -380,13 +433,13 @@ export function evaluateMockQuiz(
 
   if (percentage >= 80) {
     adaptiveFeedback = `Outstanding mastery in ${subject}! You demonstrated strong conceptual clarity. We recommend advancing to high-difficulty problem sets.`;
-    recommendedNextMilestone = `Challenge Round: Advanced synthesis & speed drills in ${subject}`;
+    recommendedNextMilestone = `Challenge Round: explain the weak edge cases, complete a flashcard pass, then take a changed-scenario retest in ${subject}`;
   } else if (percentage >= 50) {
-    adaptiveFeedback = `Good foundational comprehension (${percentage}%), but you showed uncertainty in ${weakTopics.join(', ') || 'sub-topics'}. We adjusted your daily focus to reinforce these concepts.`;
-    recommendedNextMilestone = `Targeted Drill: Concept reinforcement on ${weakTopics[0] || 'Core topics'}`;
+    adaptiveFeedback = `Good foundational comprehension (${percentage}%), but you showed uncertainty in ${weakTopics.join(', ') || 'sub-topics'}. Your next cycle starts with an explanation, active-recall flashcards, and a changed application question so the gap is repaired rather than memorized.`;
+    recommendedNextMilestone = `Targeted Recovery: explain ${weakTopics[0] || 'Core topics'}, review its flashcards, then retry application questions`;
   } else {
-    adaptiveFeedback = `Identified significant knowledge gaps in ${weakTopics.join(', ') || subject} (${percentage}%). Immediate corrective study module added to your plan.`;
-    recommendedNextMilestone = `Remedial Recovery Session: 45m deep dive into ${weakTopics[0] || 'Fundamental Concepts'}`;
+    adaptiveFeedback = `Identified significant knowledge gaps in ${weakTopics.join(', ') || subject} (${percentage}%). Immediate corrective study module added: rebuild the concept with a worked example, retrieve it with flashcards, and prove progress on a focused retest.`;
+    recommendedNextMilestone = `Remedial Recovery: 45m explanation + flashcards + worked example, followed by a focused retest on ${weakTopics[0] || 'Fundamental Concepts'}`;
   }
 
   return {
@@ -406,14 +459,7 @@ export function evaluateMockQuiz(
   };
 }
 
-export function generateMockConceptExplanation(topic: string, subject: string = 'General'): {
-  topic: string;
-  summary: string;
-  keyPoints: string[];
-  mnemonicOrAnalogy: string;
-  commonPitfall: string;
-  quickCheckQuestion: { question: string; answer: string };
-} {
+export function generateMockConceptExplanation(topic: string, subject: string = 'General'): ConceptExplanation {
   return {
     topic,
     summary: `${topic} is a core foundational concept in ${subject} designed to optimize efficiency, enforce invariants, and eliminate systemic bottlenecks.`,
@@ -424,6 +470,8 @@ export function generateMockConceptExplanation(topic: string, subject: string = 
     ],
     mnemonicOrAnalogy: `Mental Model: Think of ${topic} like a high-speed airport conveyor system—items must follow strict indexing rules to prevent collisions and congestion.`,
     commonPitfall: `Common Mistake: Forgetting base termination criteria or failing to account for cyclic references, which causes runaway recursion or memory leaks.`,
+    workedExample: `Worked example: start with a small ${topic} input, apply one operation at a time, and pause after each step to name the invariant. Then check the final result against the expected complexity or constraint.`,
+    practicePrompt: `Try a new ${topic} scenario without looking back: state the rule, trace the first two operations, and explain which edge case would make your approach fail.`,
     quickCheckQuestion: {
       question: `What is the primary condition required to maintain consistency in ${topic}?`,
       answer: `Ensuring state transitions preserve core structural invariants and prevent cyclic reference deadlocks.`

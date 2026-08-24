@@ -7,6 +7,7 @@ import {
   QuizRequest,
   QuizResult,
   QuizEvaluationRequest,
+  Flashcard,
   TaskStep,
   SharedAppState,
   NextActionRecommendation,
@@ -18,6 +19,7 @@ import {
   generateMockStudyPlan,
   generateMockQuiz,
   evaluateMockQuiz,
+  generateMockFlashcards,
   generateMockConceptExplanation,
   generateMockTaskBreakdown,
   generateMockNextAction
@@ -325,7 +327,7 @@ export async function generateStudyPlan(
 
   try {
     const prompt = `You are L.A.S.A. AI Study Coach.
-Create an adaptive, high-impact study plan for a student.
+Create an adaptive, high-impact study plan for a student. This must be a real learning loop, not a list of topics: each milestone should combine concept explanation, active-recall flashcards, a worked example, targeted application practice, and a short self-check.
 Subject: "${req.subject}"
 Exam Date: "${req.examDate}"
 Daily Study Time: ${req.dailyMinutes} minutes
@@ -365,7 +367,7 @@ Return strictly a valid JSON object matching this structure:
       milestones: (parsed.milestones || []).map((m: any, idx: number) => ({
         day: m.day || idx + 1,
         topic: m.topic || `Day ${idx + 1} Review`,
-        focusArea: m.focusArea || 'Core practice and concept reinforcement',
+        focusArea: m.focusArea || `Explain the concept, make flashcards, solve a worked example, then complete a short diagnostic quiz for ${m.topic || 'this topic'}.`,
         estimatedMinutes: m.estimatedMinutes || req.dailyMinutes,
         completed: false
       })),
@@ -378,7 +380,42 @@ Return strictly a valid JSON object matching this structure:
   }
 }
 
-// --- 3. Dynamic Quiz Generator ---
+// --- 3. Flashcard Review Deck ---
+export async function generateFlashcards(
+  subject: string,
+  topics: string[],
+  config?: AiConfig
+): Promise<Flashcard[]> {
+  const activeConfig = config ?? getAiConfig();
+  if (!activeConfig.apiKey) return generateMockFlashcards(subject, topics);
+
+  try {
+    const prompt = `You are L.A.S.A. AI Study Buddy.
+Create a six-card active-recall deck for a student studying ${subject}.
+Focus topics: ${topics.join(', ') || subject}
+
+The cards must progress from foundation to application to challenge. Include definitions, invariants or mechanisms, one worked-example prompt, one edge-case prompt, one comparison prompt, and one teach-back prompt. Do not make the backs one-line trivia; give a concise but useful explanation with the reasoning and a study cue.
+
+Return only valid JSON:
+[
+  { "front": "question or prompt", "back": "answer with reasoning", "topic": "topic", "difficulty": "foundation" | "application" | "challenge" }
+]`;
+    const parsed = JSON.parse(cleanJsonResponse(await generateText(activeConfig, prompt)));
+    if (!Array.isArray(parsed) || parsed.length === 0) return generateMockFlashcards(subject, topics);
+    return parsed.slice(0, 8).map((card: any, idx: number) => ({
+      id: `card-${Date.now()}-${idx}`,
+      front: typeof card.front === 'string' ? card.front : `Explain ${topics[idx % Math.max(topics.length, 1)] || subject}`,
+      back: typeof card.back === 'string' ? card.back : 'Explain the mechanism, trade-off, and edge case in your own words.',
+      topic: typeof card.topic === 'string' ? card.topic : topics[idx % Math.max(topics.length, 1)] || subject,
+      difficulty: card.difficulty === 'challenge' || card.difficulty === 'application' ? card.difficulty : 'foundation'
+    }));
+  } catch (error) {
+    console.warn('Flashcard generation failed, falling back to mock:', error);
+    return generateMockFlashcards(subject, topics);
+  }
+}
+
+// --- 4. Dynamic Quiz Generator ---
 export async function generateQuiz(
   req: QuizRequest,
   config?: AiConfig
@@ -392,11 +429,14 @@ export async function generateQuiz(
   }
 
   try {
-    const prompt = `You are L.A.S.A. AI Exam Evaluator.
-Generate ${req.questionCount || 3} challenging multiple-choice questions for:
+    const prompt = `You are L.A.S.A. AI Exam Evaluator and Study Buddy.
+Generate ${req.questionCount || 6} diagnostic multiple-choice questions for:
 Subject: "${req.subject}"
 Topic: "${req.topic}"
 Difficulty: "${req.difficulty || 'medium'}"
+Depth: "${req.depth || 'deep'}"
+
+The quiz must test more than recall. Include a balanced mix of foundational understanding, mechanism or invariant reasoning, application to a new scenario, edge-case diagnosis, complexity or trade-off analysis, and one teach-back style question. Each explanation must state why the correct answer is right and why the most tempting distractor is wrong. Vary the correct answer position across the set.
 
 Return strictly a valid JSON array of question objects without markdown tags:
 [
@@ -445,7 +485,7 @@ export async function evaluateQuizAndAdapt(
 
   try {
     const prompt = `You are L.A.S.A. AI Adaptive Tutor.
-Evaluate the student's quiz attempt, diagnose specific conceptual weaknesses, and suggest targeted adaptive recovery recommendations.
+Evaluate the student's quiz attempt, diagnose specific conceptual weaknesses, and suggest targeted adaptive recovery recommendations. The recovery recommendation must explicitly sequence: explain the weak concept, review active-recall flashcards, solve a worked example, and retest with a changed scenario.
 
 Subject: "${req.subject}"
 Questions & Student Answers:
@@ -464,8 +504,8 @@ Return strictly a JSON object matching this schema:
   "percentage": number,
   "weakTopics": string[], // topics student struggled with
   "strengths": string[], // topics student mastered
-  "adaptiveFeedback": string, // encouraging, actionable feedback (2-3 sentences)
-  "recommendedNextMilestone": string // title of the specific corrective study block to add
+  "adaptiveFeedback": string, // encouraging, actionable feedback that names the weak topic and the next learning actions (2-3 sentences)
+  "recommendedNextMilestone": string // title of a specific corrective block including explanation, flashcards, worked example, and retest
 }`;
 
     const responseText = cleanJsonResponse(await generateText(activeConfig, prompt));
@@ -482,8 +522,8 @@ Return strictly a JSON object matching this schema:
       questions: req.questions,
       weakTopics: parsed.weakTopics || [],
       strengths: parsed.strengths || [],
-      adaptiveFeedback: parsed.adaptiveFeedback || 'Good effort! Review weak topics to reinforce concepts.',
-      recommendedNextMilestone: parsed.recommendedNextMilestone || 'Targeted Topic Drill',
+      adaptiveFeedback: parsed.adaptiveFeedback || 'Good effort. Rebuild the weak concept with a worked example, retrieve it with flashcards, and retry a changed application scenario.',
+      recommendedNextMilestone: parsed.recommendedNextMilestone || 'Targeted Recovery: explanation + flashcards + worked example + retest',
       completedAt: new Date().toISOString()
     };
   } catch (error) {
@@ -503,6 +543,8 @@ export async function explainConcept(
   keyPoints: string[];
   mnemonicOrAnalogy: string;
   commonPitfall: string;
+  workedExample?: string;
+  practicePrompt?: string;
   quickCheckQuestion: { question: string; answer: string };
 }> {
   const activeConfig = config ?? getAiConfig();
@@ -525,6 +567,8 @@ Return strictly a JSON object matching this schema:
   "keyPoints": string[], // 3 atomic bullet points detailing mechanics or properties
   "mnemonicOrAnalogy": string, // A vivid real-world analogy or mnemonic to remember it easily
   "commonPitfall": string, // A frequent student misconception or trap to avoid
+  "workedExample": string, // A small step-by-step example that makes the mechanism concrete
+  "practicePrompt": string, // A new scenario for the student to solve without looking at the answer
   "quickCheckQuestion": {
     "question": string,
     "answer": string
@@ -544,6 +588,8 @@ Return strictly a JSON object matching this schema:
       ],
       mnemonicOrAnalogy: parsed.mnemonicOrAnalogy || `Think of ${topic} as a structured pipeline maintaining strict order.`,
       commonPitfall: parsed.commonPitfall || `Watch out for boundary conditions and off-by-one errors.`,
+      workedExample: parsed.workedExample || `Start with a small input for ${topic}, apply one operation at a time, and name the invariant after each step.`,
+      practicePrompt: parsed.practicePrompt || `Solve a new ${topic} example and explain which rule makes your answer correct.`,
       quickCheckQuestion: parsed.quickCheckQuestion || {
         question: `Why is ${topic} important?`,
         answer: `It provides guaranteed invariants and optimized execution.`

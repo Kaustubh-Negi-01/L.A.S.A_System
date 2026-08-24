@@ -38,8 +38,9 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           {
             subject,
             topic,
-            questionCount: 3,
-            difficulty: 'medium'
+            questionCount: 6,
+            difficulty: 'medium',
+            depth: 'deep'
           },
           getAiConfig()
         );
@@ -155,9 +156,10 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
       {/* Header info */}
       <div className="card-header-row">
         <div>
-          <span className="badge badge-purple" style={{ marginRight: '6px' }}>
+            <span className="badge badge-purple" style={{ marginRight: '6px' }}>
             Question {currentIndex + 1} of {questions.length}
           </span>
+          <span className="badge badge-amber">Diagnostic depth</span>
           <span className="badge badge-cyan">{currentQ.topicTag}</span>
         </div>
 

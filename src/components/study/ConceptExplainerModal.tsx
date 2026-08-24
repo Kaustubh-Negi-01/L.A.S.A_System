@@ -108,6 +108,26 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
               </div>
             </div>
 
+            {/* Worked Example & Transfer Practice */}
+            {(data.workedExample || data.practicePrompt) && (
+              <div className="glass-panel" style={{ padding: '12px 14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#a6b27b', marginBottom: '8px' }}>
+                  <CheckCircle2 size={13} />
+                  WORK IT, THEN TRANSFER IT
+                </div>
+                {data.workedExample && (
+                  <p style={{ fontSize: '12px', color: 'var(--text)', lineHeight: 1.45, marginBottom: '8px' }}>
+                    <strong>Worked example:</strong> {data.workedExample}
+                  </p>
+                )}
+                {data.practicePrompt && (
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.45 }}>
+                    <strong style={{ color: '#a6b27b' }}>Try next:</strong> {data.practicePrompt}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Analogy / Mental Model */}
             <div
               style={{
@@ -179,18 +199,28 @@ export const ConceptExplainerModal: React.FC<ConceptExplainerModalProps> = ({
               )}
             </div>
 
-            {/* Action Button: Test with Quiz */}
-            <button
-              className="btn-primary"
-              onClick={() => {
-                onClose();
-                onLaunchQuiz(topic);
-              }}
-              style={{ width: '100%', padding: '12px', fontSize: '13px' }}
-            >
-              <PlayCircle size={16} />
-              <span>Launch Practice Quiz for "{topic}"</span>
-            </button>
+            {/* Action Buttons: Recall, then Test */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.35fr', gap: '8px' }}>
+              <button
+                className="btn-secondary"
+                onClick={onClose}
+                style={{ padding: '12px 8px', fontSize: '11px' }}
+              >
+                <Brain size={14} />
+                <span>Review Flashcards</span>
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  onClose();
+                  onLaunchQuiz(topic);
+                }}
+                style={{ padding: '12px 8px', fontSize: '11px' }}
+              >
+                <PlayCircle size={16} />
+                <span>Launch 6-Question Quiz</span>
+              </button>
+            </div>
           </div>
         ) : null}
       </div>

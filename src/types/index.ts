@@ -70,6 +70,14 @@ export interface StudyPlan {
   updatedAt: string;
 }
 
+export interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  topic: string;
+  difficulty: 'foundation' | 'application' | 'challenge';
+}
+
 export interface QuizQuestion {
   id: string;
   question: string;
@@ -101,6 +109,8 @@ export interface ConceptExplanation {
   keyPoints: string[];
   mnemonicOrAnalogy: string;
   commonPitfall: string;
+  workedExample?: string;
+  practicePrompt?: string;
   quickCheckQuestion: {
     question: string;
     answer: string;
@@ -146,6 +156,7 @@ export interface QuizRequest {
   topic: string;
   questionCount?: number;
   difficulty?: 'easy' | 'medium' | 'hard';
+  depth?: 'quick' | 'deep';
 }
 
 export interface QuizEvaluationRequest {

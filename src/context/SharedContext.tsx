@@ -192,7 +192,7 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const remedialMilestone: StudyMilestone = {
           day: targetPlan.milestones.length + 1,
           topic: `Adaptive Recovery: ${quizResult.weakTopics[0]}`,
-          focusArea: `Targeted revision and error correction based on Quiz score (${quizResult.percentage}%).`,
+          focusArea: `Explain the missed concept, review active-recall flashcards, trace a worked example, solve targeted questions, then take a changed-scenario retest (${quizResult.percentage}% baseline).`,
           estimatedMinutes: 45,
           completed: false
         };
@@ -220,9 +220,10 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         sourceReferenceId: quizResult.id,
         createdAt: new Date().toISOString(),
         steps: [
-          { id: `step-${Date.now()}-1`, title: `Review mistakes in ${quizResult.weakTopics[0] || 'concepts'}`, isCompleted: false },
-          { id: `step-${Date.now()}-2`, title: 'Solve 3 targeted practice questions', isCompleted: false },
-          { id: `step-${Date.now()}-3`, title: 'Retake adaptive diagnostic quiz', isCompleted: false }
+          { id: `step-${Date.now()}-1`, title: `Read the explanation and review mistakes in ${quizResult.weakTopics[0] || 'concepts'}`, isCompleted: false },
+          { id: `step-${Date.now()}-2`, title: 'Complete the weak-topic flashcard deck and say the rule aloud', isCompleted: false },
+          { id: `step-${Date.now()}-3`, title: 'Solve targeted application questions with one worked example', isCompleted: false },
+          { id: `step-${Date.now()}-4`, title: 'Retake the adaptive diagnostic with a changed scenario', isCompleted: false }
         ]
       };
 
