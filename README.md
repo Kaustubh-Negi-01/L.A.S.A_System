@@ -196,7 +196,7 @@ The long-term vision is an assistant that quietly turns phone moments into usefu
 | Contributor | Focus |
 | --- | --- |
 | **Kaustubh** | Study Coach, shared context engine, integration, and deployment |
-| **Santhosh** | UI/UX, smartphone app shell, and Understand & Act scanner experience |
+| **Santosh** | UI/UX, smartphone app shell, and Understand & Act scanner experience |
 | **Hamza** | Gemini AI services, Productivity Coach, and AI pipelines |
 
 ---
