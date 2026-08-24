@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Wifi, BatteryMedium, Sparkles, Settings as SettingsIcon, RotateCcw, CircleCheck, Sun, Moon } from 'lucide-react';
 import { useSharedContext } from '../../context/SharedContext';
+import { LockScreen, NotificationShade, type SystemTab } from '../system/PhoneSystemOverlays';
 
 type Theme = 'dark' | 'light';
 
@@ -10,6 +11,11 @@ interface SmartphoneFrameProps {
   isModeSelection?: boolean;
   onOpenSettings: () => void;
   bottomNav: React.ReactNode;
+  overlay?: React.ReactNode;
+  onSwipeBack: () => void;
+  onSwipeForward: () => void;
+  onSwipeUpHome: () => void;
+  onNavigateToTab: (tab: SystemTab) => void;
 }
 
 const sectionCopy = {
@@ -40,7 +46,12 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   activeTab,
   isModeSelection = false,
   onOpenSettings,
-  bottomNav
+  bottomNav,
+  overlay,
+  onSwipeBack,
+  onSwipeForward,
+  onSwipeUpHome,
+  onNavigateToTab
 }) => {
   const { customApiKey, aiMode, resetToDemoData } = useSharedContext();
   const [currentTime, setCurrentTime] = useState<string>('09:41');
@@ -48,7 +59,10 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   const [isResetting, setIsResetting] = useState(false);
   const [isHaptic, setIsHaptic] = useState(false);
   const [feedbackPoint, setFeedbackPoint] = useState<{ x: number; y: number; key: number } | null>(null);
+  const [isShadeOpen, setIsShadeOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const phoneRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number; target: EventTarget | null } | null>(null);
   const copy = sectionCopy[activeTab];
   const isLive = aiMode === 'gemini' && Boolean(customApiKey || import.meta.env.VITE_GEMINI_API_KEY);
 
@@ -62,6 +76,61 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
     resetToDemoData();
     window.setTimeout(() => setIsResetting(false), 700);
   };
+
+  useEffect(() => {
+    const onTouchStart = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY, target: event.target };
+    };
+
+    const onTouchEnd = (event: TouchEvent) => {
+      const start = touchStartRef.current;
+      const touch = event.changedTouches[0];
+      touchStartRef.current = null;
+      if (!start || !touch) return;
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      const frame = phoneRef.current;
+      if (!frame) return;
+
+      if (isLocked) {
+        if (dy < -64) setIsLocked(false);
+        return;
+      }
+
+      const target = start.target instanceof Element ? start.target : null;
+      if (target?.closest('button, a, input, textarea, select, .modal-sheet')) return;
+
+      if (isShadeOpen && dy < -64 && absY > absX) {
+        setIsShadeOpen(false);
+        return;
+      }
+      if (start.y - frame.getBoundingClientRect().top < 86 && dy > 64 && absY > absX) {
+        setIsShadeOpen(true);
+        window.dispatchEvent(new CustomEvent('lasa-sound-request', { detail: { kind: 'open', clientX: touch.clientX, clientY: touch.clientY } }));
+        return;
+      }
+      if (dy < -84 && absY > absX && start.y > frame.getBoundingClientRect().bottom - 140) {
+        onSwipeUpHome();
+        return;
+      }
+      if (absX > 64 && absX > absY) {
+        if (dx > 0) onSwipeBack();
+        else onSwipeForward();
+      }
+    };
+
+    const frame = phoneRef.current;
+    frame?.addEventListener('touchstart', onTouchStart, { passive: true });
+    frame?.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      frame?.removeEventListener('touchstart', onTouchStart);
+      frame?.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isLocked, isShadeOpen, onSwipeBack, onSwipeForward, onSwipeUpHome]);
 
   useEffect(() => {
     const onFeedback = (event: Event) => {
@@ -152,6 +221,20 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
           {children}
         </main>
         {!isModeSelection && bottomNav}
+
+        {overlay}
+        {isShadeOpen && !isLocked && (
+          <NotificationShade
+            activeTab={activeTab as SystemTab}
+            theme={theme}
+            onThemeChange={setTheme}
+            onClose={() => setIsShadeOpen(false)}
+            onLock={() => { setIsShadeOpen(false); setIsLocked(true); }}
+            onOpenSettings={() => { setIsShadeOpen(false); onOpenSettings(); }}
+            onNavigateToTab={onNavigateToTab}
+          />
+        )}
+        {isLocked && <LockScreen currentTime={currentTime} onUnlock={() => setIsLocked(false)} />}
       </div>
     </div>
   );

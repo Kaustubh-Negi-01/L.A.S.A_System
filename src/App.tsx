@@ -31,6 +31,31 @@ const AppContent: React.FC = () => {
     }, 120);
   }, [activeTab, isModeSelectionOpen, isTransitioning]);
 
+  const goHome = useCallback(() => {
+    setIsSettingsOpen(false);
+    setIsModeSelectionOpen(true);
+    setIsTransitioning(false);
+  }, []);
+
+  const goBack = useCallback(() => {
+    if (isSettingsOpen) {
+      setIsSettingsOpen(false);
+      return;
+    }
+    if (isModeSelectionOpen) return;
+    const tabs: AppTab[] = ['visual', 'study', 'productivity'];
+    const previousTab = tabs[tabs.indexOf(activeTab) - 1];
+    if (previousTab) navigateTo(previousTab);
+    else goHome();
+  }, [activeTab, goHome, isModeSelectionOpen, isSettingsOpen, navigateTo]);
+
+  const goForward = useCallback(() => {
+    if (isModeSelectionOpen || isSettingsOpen) return;
+    const tabs: AppTab[] = ['visual', 'study', 'productivity'];
+    const nextTab = tabs[tabs.indexOf(activeTab) + 1];
+    if (nextTab) navigateTo(nextTab);
+  }, [activeTab, isModeSelectionOpen, isSettingsOpen, navigateTo]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -43,26 +68,9 @@ const AppContent: React.FC = () => {
       if (nextTab) navigateTo(nextTab);
     };
 
-    let touchStartX = 0;
-    const onTouchStart = (event: TouchEvent) => {
-      touchStartX = event.changedTouches[0]?.clientX ?? 0;
-    };
-    const onTouchEnd = (event: TouchEvent) => {
-      const touchEndX = event.changedTouches[0]?.clientX ?? 0;
-      const distance = touchEndX - touchStartX;
-      if (Math.abs(distance) < 56) return;
-      const tabs: AppTab[] = ['visual', 'study', 'productivity'];
-      const nextIndex = tabs.indexOf(activeTab) + (distance < 0 ? 1 : -1);
-      if (nextIndex >= 0 && nextIndex < tabs.length) navigateTo(tabs[nextIndex]);
-    };
-
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
     return () => {
       window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchend', onTouchEnd);
     };
   }, [activeTab, navigateTo]);
 
@@ -74,6 +82,20 @@ const AppContent: React.FC = () => {
             activeTab={activeTab}
             isModeSelection={isModeSelectionOpen}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onSwipeBack={goBack}
+        onSwipeForward={goForward}
+        onSwipeUpHome={goHome}
+        onNavigateToTab={navigateTo}
+        overlay={
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            onSwitchMode={() => {
+              setIsSettingsOpen(false);
+              setIsModeSelectionOpen(true);
+            }}
+          />
+        }
         bottomNav={
           <BottomNav
             activeTab={activeTab}
@@ -101,15 +123,6 @@ const AppContent: React.FC = () => {
           )}
         </div>
       </SmartphoneFrame>
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onSwitchMode={() => {
-          setIsSettingsOpen(false);
-          setIsModeSelectionOpen(true);
-        }}
-      />
     </>
   );
 };
