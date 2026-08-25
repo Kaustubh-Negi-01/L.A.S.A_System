@@ -89,6 +89,11 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
     && dispatchResult.addedTasks === 0
     && dispatchResult.addedEvents === 0
     && !dispatchResult.planCreated;
+  const scanStatus = scan.source === 'fallback'
+    ? { label: 'Review Required', className: 'badge badge-amber' }
+    : scan.source === 'simulation'
+      ? { label: 'Demo Simulation', className: 'badge badge-cyan' }
+      : { label: 'AI Processed', className: 'badge badge-green' };
 
   const getLinkedTask = (actionIndex: number) => tasks.find(task => task.sourceReferenceId === scan.id
     && (task.sourceActionIndex === actionIndex || task.title === scan.actionItems[actionIndex]));
@@ -237,9 +242,15 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
           >
             {copied ? <Check size={13} color="#34d399" /> : <Share2 size={13} />}
           </button>
-          <span className="badge badge-green">AI Processed</span>
+          <span className={scanStatus.className}>{scanStatus.label}</span>
         </div>
       </div>
+
+      {scan.source === 'fallback' && (
+        <div className="scan-fallback-notice" role="status">
+          This image was not confidently read. No events were invented; choose a vision-capable model or try a clearer image.
+        </div>
+      )}
 
       {/* Title & Summary */}
       <div style={{ marginBottom: '14px' }}>

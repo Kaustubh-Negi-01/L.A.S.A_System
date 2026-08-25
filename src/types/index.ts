@@ -47,6 +47,8 @@ export interface VisualScanResult {
   actionItems: string[];
   recommendedActions?: string[];
   followUpSuggestions?: string[];
+  /** How this result was produced, so fallback data is never presented as a real scan. */
+  source?: 'live' | 'simulation' | 'fallback';
   rawText?: string;
   scannedAt: string;
 }

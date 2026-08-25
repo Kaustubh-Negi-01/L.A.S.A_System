@@ -136,6 +136,7 @@ export const initialDemoState: SharedAppState = {
         'Prepare 3-day adaptive revision schedule',
         'Collect past 3 years mid-term question papers'
       ],
+      source: 'simulation',
       scannedAt: new Date().toISOString()
     }
   ]
@@ -202,9 +203,63 @@ export function generateMockVisualFollowUp(question: string, scan: VisualScanRes
   };
 }
 
-export function generateMockVisualInsights(hintText?: string): VisualScanResult {
-  const isHackathon = hintText?.toLowerCase().includes('hackathon');
-  const isML = hintText?.toLowerCase().includes('machine learning') || hintText?.toLowerCase().includes('neural');
+export function generateMockVisualInsights(hintText?: string, source: 'simulation' | 'fallback' = 'simulation'): VisualScanResult {
+  if (source === 'fallback') {
+    return {
+      id: `scan-${Date.now()}`,
+      title: 'Image needs a live vision model',
+      summary: 'L.A.S.A. could not reliably extract this image. Review it manually or choose a multimodal model in Settings, then scan again.',
+      extractedDates: [],
+      extractedEvents: [],
+      actionItems: ['Review the uploaded image manually', 'Choose a vision-capable model in Settings', 'Scan the image again'],
+      keyFacts: ['No reliable text or events were extracted from this image.'],
+      recommendedActions: ['Use a multimodal model', 'Try a clearer image'],
+      followUpSuggestions: ['What can I do if the image was not read?', 'How do I choose a vision model?'],
+      source: 'fallback',
+      scannedAt: new Date().toISOString()
+    };
+  }
+
+  const normalizedHint = hintText?.toLowerCase() || '';
+  const isExamNotice = normalizedHint.includes('mid-semester exam notice') || normalizedHint.includes('operating systems & algorithms');
+  const isHackathon = normalizedHint.includes('hackathon');
+  const isML = normalizedHint.includes('machine learning') || normalizedHint.includes('neural');
+
+  if (isExamNotice) {
+    const eventDate = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
+    return {
+      id: `scan-${Date.now()}`,
+      title: 'Mid-Semester Exam Notice',
+      summary: 'Computer Science notice for the Operating Systems & Algorithms mid-semester examination.',
+      extractedDates: [eventDate],
+      extractedEvents: [
+        {
+          id: `evt-${Date.now()}`,
+          title: 'Operating Systems & Algorithms Mid-term Exam',
+          date: eventDate,
+          time: '10:00',
+          location: 'Auditorium C',
+          category: 'exam',
+          description: 'Department of Computer Science mid-semester examination notice.',
+          actionSuggested: ['Create Study Plan', 'Generate Practice Quiz']
+        }
+      ],
+      actionItems: [
+        'Review Operating Systems & Algorithms topics',
+        'Prepare a focused revision plan',
+        'Take a diagnostic practice quiz'
+      ],
+      keyFacts: [
+        'Department: Computer Science',
+        'Subject: Operating Systems & Algorithms',
+        'Venue: Auditorium C'
+      ],
+      recommendedActions: ['Create a focused study plan', 'Add the exam to Calendar', 'Take a diagnostic quiz'],
+      followUpSuggestions: ['What topics should I revise first?', 'What do I need to bring?', 'How should I prepare?'],
+      source: 'simulation',
+      scannedAt: new Date().toISOString()
+    };
+  }
   
   if (isHackathon) {
     const eventDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -230,6 +285,7 @@ export function generateMockVisualInsights(hintText?: string): VisualScanResult 
         'Verify cross-mode integration on mobile frame',
         'Record 2-minute demo walkthrough'
       ],
+      source: 'simulation',
       scannedAt: new Date().toISOString()
     };
   }
@@ -258,6 +314,7 @@ export function generateMockVisualInsights(hintText?: string): VisualScanResult 
         'Generate evaluation charts',
         'Format write-up in LaTeX'
       ],
+      source: 'simulation',
       scannedAt: new Date().toISOString()
     };
   }
@@ -286,6 +343,7 @@ export function generateMockVisualInsights(hintText?: string): VisualScanResult 
       'Practice Subnetting calculations',
       'Take diagnostic quiz on routing algorithms'
     ],
+    source: 'simulation',
     scannedAt: new Date().toISOString()
   };
 }

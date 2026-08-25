@@ -205,8 +205,8 @@ export async function extractVisualInsights(
   const apiKey = activeConfig.apiKey;
   
   if (!apiKey) {
-    console.info('Using Mock Failover for Visual Insights (No API Key)');
-    return generateMockVisualInsights();
+    console.info('Using review-required fallback for Visual Insights (No API Key)');
+    return generateMockVisualInsights(undefined, 'fallback');
   }
 
   try {
@@ -267,11 +267,12 @@ Return strictly a valid JSON object matching this TypeScript interface without m
       keyFacts: Array.isArray(parsed.keyFacts) ? parsed.keyFacts.slice(0, 4) : [],
       recommendedActions: Array.isArray(parsed.recommendedActions) ? parsed.recommendedActions.slice(0, 5) : [],
       followUpSuggestions: Array.isArray(parsed.followUpSuggestions) ? parsed.followUpSuggestions.slice(0, 4) : [],
+      source: 'live',
       scannedAt: new Date().toISOString()
     };
   } catch (error) {
-    console.warn('Gemini Visual Scan failed, switching to Smart Mock fallback:', error);
-    return generateMockVisualInsights();
+    console.warn('Visual scan failed; showing a review-required fallback:', error);
+    return generateMockVisualInsights(undefined, 'fallback');
   }
 }
 
@@ -317,12 +318,13 @@ ${sourceText}`;
       keyFacts: Array.isArray(parsed.keyFacts) ? parsed.keyFacts.slice(0, 4) : [],
       recommendedActions: Array.isArray(parsed.recommendedActions) ? parsed.recommendedActions.slice(0, 5) : [],
       followUpSuggestions: Array.isArray(parsed.followUpSuggestions) ? parsed.followUpSuggestions.slice(0, 4) : [],
+      source: 'live',
       rawText: sourceText,
       scannedAt: new Date().toISOString()
     };
   } catch (error) {
-    console.warn('Live preset extraction failed, using mock fallback:', error);
-    return generateMockVisualInsights(sourceText);
+    console.warn('Live preset extraction failed; showing a review-required fallback:', error);
+    return generateMockVisualInsights(undefined, 'fallback');
   }
 }
 

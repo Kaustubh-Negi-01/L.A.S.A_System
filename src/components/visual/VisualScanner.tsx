@@ -123,7 +123,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
       onScanComplete(scanResult);
     } catch (err) {
       console.error('Visual scanner error:', err);
-      const fallback = generateMockVisualInsights();
+      const fallback = generateMockVisualInsights(undefined, 'fallback');
       addScanResult(fallback);
       onScanComplete(fallback);
     } finally {
