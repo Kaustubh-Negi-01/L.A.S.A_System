@@ -61,6 +61,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
   useEffect(() => {
     if (!isOpen) return;
+    setIsLeaving(false);
     setInputKey(customApiKey);
     setInputProvider(aiProvider);
     setInputBaseUrl(aiBaseUrl || (aiProvider === 'gemini' ? GEMINI_BASE_URL : ''));
