@@ -116,8 +116,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     try {
       const models = await listAvailableModels(buildConfig());
       setAvailableModels(models);
-      if (models.length > 0 && !models.some(model => model.id === inputModel)) {
-        setInputModel(models[0].id);
+      const discoveredModel = models.length > 0 && !models.some(model => model.id === inputModel)
+        ? models[0].id
+        : inputModel.trim();
+      if (models.length > 0) {
+        setInputModel(discoveredModel);
+        setCustomApiKey(inputKey.trim());
+        setAiProvider(inputProvider);
+        setAiBaseUrl(inputBaseUrl.trim());
+        setAiModel(discoveredModel);
+        setAiMode('gemini');
       }
       setConnectionState('success');
       setConnectionMessage(models.length ? `${models.length} model${models.length === 1 ? '' : 's'} found.` : 'No models returned by this provider.');
@@ -128,10 +136,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   };
 
   const persistConnectionConfig = () => {
-    setCustomApiKey(inputKey.trim());
+    const trimmedKey = inputKey.trim();
+    setCustomApiKey(trimmedKey);
     setAiProvider(inputProvider);
     setAiBaseUrl(inputBaseUrl.trim());
     setAiModel(inputModel.trim());
+    if (trimmedKey || (inputProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY)) {
+      setAiMode('gemini');
+    }
   };
 
   const handleSave = () => {

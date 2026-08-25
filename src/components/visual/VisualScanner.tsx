@@ -223,6 +223,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
           <div
             onClick={() => fileInputRef.current?.click()}
             style={{
+              position: 'relative',
               padding: '16px 12px',
               borderRadius: '6px',
               border: '2px dashed var(--border-subtle)',
@@ -242,7 +243,9 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
               ref={fileInputRef}
               accept="image/*"
               onChange={handleFileChange}
-              style={{ display: 'none' }}
+              onClick={event => event.stopPropagation()}
+              aria-label="Upload an image to scan"
+              style={{ position: 'absolute', inset: 0, zIndex: 2, width: '100%', height: '100%', opacity: 0.01, cursor: 'pointer' }}
             />
             <Upload size={20} color="var(--primary-cyan)" />
             <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text)' }}>Upload File</span>
