@@ -3,7 +3,7 @@ import { X, Key, ShieldCheck, Cpu, Database, RefreshCw, CheckCircle, ArrowUpRigh
 import { useSharedContext } from '../../context/SharedContext';
 import { listAvailableModels, testAiConnection } from '../../services/geminiService';
 import { AiProvider } from '../../types';
-import { DEFAULT_PRIMARY_OPENAI_MODEL, DEFAULT_SECONDARY_OPENAI_BASE_URL, DEFAULT_SECONDARY_OPENAI_MODEL } from '../../services/aiDefaults';
+import { DEFAULT_PRIMARY_OPENAI_BASE_URL, DEFAULT_PRIMARY_OPENAI_MODEL, DEFAULT_SECONDARY_OPENAI_BASE_URL, DEFAULT_SECONDARY_OPENAI_MODEL } from '../../services/aiDefaults';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -124,8 +124,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     apiKey: inputKey.trim() || (inputProvider === 'gemini' ? String(import.meta.env.VITE_GEMINI_API_KEY || '') : ''),
     mode: 'gemini' as const,
     provider: inputProvider,
-    baseUrl: inputBaseUrl.trim(),
-    model: inputModel.trim(),
+    baseUrl: inputBaseUrl.trim() || (inputProvider === 'gemini' ? GEMINI_BASE_URL : DEFAULT_PRIMARY_OPENAI_BASE_URL),
+    model: inputModel.trim() || (inputProvider === 'gemini' ? 'gemini-1.5-flash' : DEFAULT_PRIMARY_OPENAI_MODEL),
     secondaryApiKey: inputSecondaryKey.trim(),
     secondaryBaseUrl: inputSecondaryBaseUrl.trim(),
     secondaryModel: inputSecondaryModel.trim()

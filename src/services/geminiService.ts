@@ -145,8 +145,20 @@ export async function listAvailableModels(config: Omit<AiConfig, 'model' | 'mode
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'models', baseUrl: config.baseUrl, apiKey: config.apiKey })
   }, 'Model discovery');
-  if (!response.ok) throw new Error(`Model discovery failed (${response.status})`);
+  if (!response.ok) throw new Error(await formatProviderError(response, 'Model discovery failed'));
   return mapModelOptions(await response.json());
+}
+
+async function formatProviderError(response: Response, label: string): Promise<string> {
+  let detail = '';
+  try {
+    const raw = await response.text();
+    const payload = raw ? JSON.parse(raw) : null;
+    detail = payload?.error?.message || payload?.message || (raw && raw.slice(0, 240)) || '';
+  } catch {
+    detail = '';
+  }
+  return `${label} (${response.status})${detail ? `: ${detail}` : ''}`;
 }
 
 function extractChatText(payload: any): string {
@@ -188,7 +200,7 @@ async function generateTextOnce(config: AiConfig, prompt: string, imagePart?: Ge
       payload: { model: config.model, messages: [{ role: 'user', content: userContent } satisfies ChatMessage], temperature: 0.2 }
     })
   }, 'AI request');
-  if (!response.ok) throw new Error(`AI request failed (${response.status})`);
+  if (!response.ok) throw new Error(await formatProviderError(response, 'AI request failed'));
   const text = extractChatText(await response.json());
   if (!text) throw new Error('AI provider returned no message content');
   return text;
