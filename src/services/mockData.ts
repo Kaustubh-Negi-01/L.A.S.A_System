@@ -419,88 +419,76 @@ export function generateMockStudyPlan(
   };
 }
 
-export function generateMockQuiz(subject: string, topic: string): QuizQuestion[] {
-  const stamp = Date.now();
+type LocalQuizDraft = {
+  question: string;
+  answer: string;
+  distractors: string[];
+  explanation: string;
+  tag: string;
+};
+
+function buildLocalQuizProfile(subject: string, topic: string): LocalQuizDraft[] {
+  const name = topic.trim() || subject.trim() || 'this topic';
+  const normalized = `${subject} ${topic}`.toLowerCase();
+  const isOdoo = normalized.includes('odoo');
+  const isHackathon = normalized.includes('hackathon') || normalized.includes('prototype') || normalized.includes('nmit');
+  const isAlgorithms = normalized.includes('algorithm') || normalized.includes('data structure') || normalized.includes('graph') || normalized.includes('tree');
+  const isSystems = normalized.includes('operating system') || normalized.includes('network') || normalized.includes('database') || normalized.includes('distributed');
+
+  if (isHackathon) {
+    const workflowAnswer = isOdoo
+      ? 'Keep data ownership, roles, and status transitions explicit across the Odoo workflow.'
+      : 'Prioritize one complete user journey that can be demonstrated from input to outcome.';
+    return [
+      { question: `For ${name}, what should the first milestone prove?`, answer: 'A narrow user problem can be solved through a working, testable end-to-end flow.', distractors: ['That every planned feature is already complete.', 'That the interface uses the most complex possible architecture.', 'That a long presentation can replace a working demonstration.'], explanation: 'A strong hackathon milestone reduces risk by proving one complete journey before adding breadth.', tag: 'Problem framing' },
+      { question: `Which scope decision is strongest when building ${name} under time pressure?`, answer: 'Prioritize one complete user journey before optional features.', distractors: ['Add every requested feature before testing anything.', 'Optimize visual polish while leaving the core flow incomplete.', 'Change the target user whenever an implementation becomes difficult.'], explanation: 'A complete narrow flow creates testable evidence and makes the remaining scope explicit.', tag: 'Scope strategy' },
+      { question: isOdoo ? `Which design choice best protects an Odoo-centered solution for ${name}?` : `Which evidence makes a ${name} prototype credible?`, answer: isOdoo ? workflowAnswer : 'A reproducible demo, clear success criteria, and honest limits.', distractors: isOdoo ? ['Duplicate the same record in every module without an owner.', 'Hide failed transitions so the workflow appears shorter.', 'Use a single hard-coded screen with no state changes.'] : ['A list of future features without a runnable path.', 'A polished landing screen with no test data.', 'A claim that every edge case is solved without evidence.'], explanation: isOdoo ? 'Integrated business workflows stay understandable when ownership and state changes are explicit.' : 'Judges can trust a prototype when they can reproduce its result and understand what it does not claim.', tag: isOdoo ? 'Workflow integration' : 'Demo evidence' },
+      { question: `A ${name} demo works on the happy path but fails with missing input. What should happen next?`, answer: 'Add a clear validation state, test the failure, and explain the recovery path.', distractors: ['Silently invent a result so the demo never stops.', 'Remove the input so the edge case cannot occur.', 'Treat the failure as irrelevant because the happy path works.'], explanation: 'A visible, recoverable failure is safer and more convincing than silently producing an unsupported result.', tag: 'Edge-case testing' },
+      { question: `When comparing two implementation approaches for ${name}, what should guide the choice?`, answer: 'User value, integration risk, testability, and the time required to prove the result.', distractors: ['Only the number of files created.', 'Only the newest library or model name.', 'Only the approach with the longest feature list.'], explanation: 'Hackathon trade-offs should connect the chosen approach to a measurable user outcome and evidence.', tag: 'Trade-offs' },
+      { question: `How would you teach the core idea of ${name} to a new teammate?`, answer: 'State the user problem, trace one interaction, show the system response, and name the measurable outcome.', distractors: ['Read the feature list without showing a user journey.', 'Start with internal names and skip the expected behavior.', 'Show only the final screen without the input or decision.'], explanation: 'A short trace from problem to outcome makes the design understandable and testable.', tag: 'Teach-back' }
+    ];
+  }
+
+  if (isAlgorithms) {
+    return [
+      { question: `What should you define before implementing ${name}?`, answer: 'The input, output, invariant, constraints, and a condition that proves correctness.', distractors: ['Only the variable names.', 'Only the screen layout.', 'A random test that happens to pass once.'], explanation: `A precise contract turns ${name} from a label into a testable method.`, tag: 'Foundations' },
+      { question: `A ${name} solution fails on the smallest valid input. What is the best first check?`, answer: 'Inspect base cases, empty values, boundary conditions, and the first state transition.', distractors: ['Increase the timeout without inspecting the state.', 'Rewrite the entire solution immediately.', 'Remove the smallest input from the test set.'], explanation: 'Small inputs expose missing initialization and boundary assumptions early.', tag: 'Edge cases' },
+      { question: `If the input size for ${name} grows substantially, what should you compare?`, answer: 'Time and space growth together with a trace of representative and worst-case inputs.', distractors: ['Only lines of code.', 'Only the average result on one small example.', 'Only whether the output looks visually correct.'], explanation: 'Scalability is a resource question supported by concrete traces.', tag: 'Complexity' },
+      { question: `Which comparison is most useful when choosing an approach to ${name}?`, answer: 'Correctness conditions, asymptotic cost, memory use, and failure modes.', distractors: ['Familiarity alone.', 'The shortest function name.', 'The approach with the most comments regardless of behavior.'], explanation: 'A meaningful comparison links the algorithm to the constraints it must satisfy.', tag: 'Trade-offs' },
+      { question: `What is the best way to learn ${name} beyond memorizing a definition?`, answer: 'State the invariant, trace a small example, and predict an edge-case result.', distractors: ['Repeat the definition without applying it.', 'Skip the trace and memorize the final output.', 'Study only successful inputs.'], explanation: 'Retrieval plus a worked trace checks whether the mechanism transfers to a new case.', tag: 'Teach-back' },
+      { question: `After missing a ${name} question, which recovery step is strongest?`, answer: 'Explain the failed assumption, solve a changed example, and retest the boundary.', distractors: ['Repeat the same answer until it feels familiar.', 'Avoid the topic permanently.', 'Read a longer explanation without solving anything.'], explanation: 'A changed example reveals whether the learner repaired the reasoning rather than memorized an option.', tag: 'Remediation' }
+    ];
+  }
+
+  const domain = isSystems ? 'system behavior and constraints' : 'the concepts and decisions inside the topic';
   return [
-    {
-      id: `q-${stamp}-1`,
-      question: `Which statement best captures the core mechanism of ${topic}?`,
-      options: [
-        `It preserves a useful invariant while reducing the remaining work`,
-        'It always examines every possible state before returning',
-        'It removes the need to define input and output conditions',
-        'It trades correctness for a faster average result'
-      ],
-      correctOptionIndex: 0,
-      explanation: `The strongest mental model for ${topic} is the invariant it preserves and how that invariant reduces future work. The other choices confuse exhaustive search, vague specifications, or approximation with the actual mechanism.`,
-      topicTag: topic
-    },
-    {
-      id: `q-${stamp}-2`,
-      question: `A solution for ${topic} works on normal inputs but fails at a boundary. What should you inspect first?`,
-      options: [
-        'Whether the interface uses a newer visual theme',
-        'Base cases, empty input, and inclusive versus exclusive bounds',
-        'Whether the code has enough comments',
-        'Whether the variable names are longer than eight characters'
-      ],
-      correctOptionIndex: 1,
-      explanation: 'Boundary failures usually come from an incomplete base case or an off-by-one assumption. Test the smallest valid input, the largest relevant boundary, and an empty case before changing the overall strategy.',
-      topicTag: `${topic} Edge Cases`
-    },
-    {
-      id: `q-${stamp}-3`,
-      question: `You must apply ${topic} to a dataset twice as large. Which reasoning is most useful before coding?`,
-      options: [
-        'Choose the shortest implementation regardless of complexity',
-        'Estimate time and space growth, then trace one representative example',
-        'Assume the average case is always the worst case',
-        'Add random retries so failures become less visible'
-      ],
-      correctOptionIndex: 1,
-      explanation: 'Scaling decisions require both a growth estimate and a concrete trace. The trace exposes state transitions, while complexity analysis predicts whether the approach remains practical.',
-      topicTag: `${topic} Application`
-    },
-    {
-      id: `q-${stamp}-4`,
-      question: `What is the most important trade-off to explain when comparing two approaches to ${topic}?`,
-      options: [
-        'Only which one uses fewer lines of code',
-        'Correctness conditions, runtime growth, memory use, and failure modes',
-        'Only which one looks more familiar at first glance',
-        'Whether both approaches use the same variable names'
-      ],
-      correctOptionIndex: 1,
-      explanation: 'A meaningful comparison connects correctness to resource use and failure modes. Conciseness or familiarity alone does not show that an approach is appropriate for the constraints.',
-      topicTag: `${topic} Trade-offs`
-    },
-    {
-      id: `q-${stamp}-5`,
-      question: `Which explanation would teach ${topic} most effectively to someone who keeps memorizing steps without understanding them?`,
-      options: [
-        'List every API name without an example',
-        'Give the invariant, walk through a small example, then test an edge case',
-        'Ask them to repeat the definition ten times',
-        'Skip the explanation and show only the final output'
-      ],
-      correctOptionIndex: 1,
-      explanation: 'Teaching becomes transferable when the learner sees the invariant operate on a concrete example and then predicts what changes at an edge case. That sequence checks understanding rather than recognition.',
-      topicTag: `${topic} Teach-back`
-    },
-    {
-      id: `q-${stamp}-6`,
-      question: `After missing a ${topic} question, which next step is most likely to improve retention?`,
-      options: [
-        'Immediately retake the same question until the option feels familiar',
-        'Review the explanation, write a one-sentence rule, and retry a changed scenario',
-        'Avoid the topic and spend the session on already-mastered material',
-        'Read a longer answer without attempting retrieval'
-      ],
-      correctOptionIndex: 1,
-      explanation: 'Mistake-driven remediation should make the learner retrieve the rule and apply it to a new scenario. Repeating the same option can create recognition without durable understanding.',
-      topicTag: `${topic} Remediation`
-    }
+    { question: `What is the most useful starting point for understanding ${name}?`, answer: `Define the inputs, outputs, constraints, and success condition for ${domain}.`, distractors: ['Start with terminology without a concrete goal.', 'Assume the topic has no constraints.', 'Memorize examples without identifying the rule.'], explanation: 'A clear contract makes the topic concrete and gives later answers something testable to reference.', tag: 'Foundations' },
+    { question: `A ${name} workflow behaves correctly in normal conditions but fails at a boundary. What should you inspect?`, answer: 'Missing input, state transitions, permissions, limits, and the recovery path.', distractors: ['Only the visual theme.', 'Only the fastest successful run.', 'Whether the documentation uses enough adjectives.'], explanation: 'Boundary behavior is often determined by omitted states and recovery decisions.', tag: 'Edge cases' },
+    { question: `How should you apply ${name} to a new scenario?`, answer: 'Map the scenario to the core rule, trace one example, and verify the result against its constraints.', distractors: ['Copy the previous answer unchanged.', 'Ignore constraints until after implementation.', 'Choose the most complicated explanation available.'], explanation: 'Application requires connecting the rule to a new context and checking the result.', tag: 'Application' },
+    { question: `Which trade-off matters most when evaluating two approaches to ${name}?`, answer: 'Reliability, cost, speed, maintainability, and the consequences of failure.', distractors: ['Only which option sounds newer.', 'Only which option has fewer words.', 'Only which option was easiest to describe.'], explanation: 'A good decision makes both benefits and failure costs explicit.', tag: 'Trade-offs' },
+    { question: `What would make a teach-back explanation of ${name} convincing?`, answer: 'A plain-language model, a worked example, and one limitation or edge case.', distractors: ['A definition with no example.', 'A list of features with no relationship.', 'A confident claim that skips uncertainty.'], explanation: 'The example and limitation show whether the learner understands how the concept behaves.', tag: 'Teach-back' },
+    { question: `After getting a ${name} question wrong, what should the next practice cycle include?`, answer: 'A targeted explanation, active recall, a changed example, and a short retest.', distractors: ['The identical question only.', 'More passive reading with no retrieval.', 'A completely unrelated topic.'], explanation: 'A changed example tests transfer and helps distinguish understanding from recognition.', tag: 'Remediation' }
   ];
+}
+
+export function generateMockQuiz(subject: string, topic: string): QuizQuestion[] {
+  const drafts = buildLocalQuizProfile(subject, topic);
+  const seedText = `${subject}|${topic}`;
+  const seed = Array.from(seedText).reduce((total, character) => total + character.charCodeAt(0), 0);
+  const stamp = Date.now();
+  return drafts.map((draft, index) => {
+    const options = [draft.answer, ...draft.distractors];
+    const correctOptionIndex = (seed + index * 3) % options.length;
+    const rotatedOptions = options.map((_, optionIndex) => options[(optionIndex - correctOptionIndex + options.length) % options.length]);
+    return {
+      id: `q-${stamp}-${index + 1}`,
+      question: draft.question,
+      options: rotatedOptions,
+      correctOptionIndex,
+      explanation: draft.explanation,
+      topicTag: `${topic.trim() || subject.trim() || 'General'} · ${draft.tag}`
+    };
+  });
 }
 
 export function generateMockFlashcards(subject: string, topics: string[]): { id: string; front: string; back: string; topic: string; difficulty: 'foundation' | 'application' | 'challenge' }[] {
