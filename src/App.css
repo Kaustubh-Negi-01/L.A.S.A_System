@@ -1230,8 +1230,10 @@ a,
 .settings-status-panel strong { color: var(--text); font-size: 11px; }
 .settings-status-panel p { margin-top: 3px; color: var(--text-muted); font-size: 9px; line-height: 1.35; }
 .settings-field-label { display: block; margin: 8px 0 6px; color: var(--text-muted); font-size: 10px; font-weight: 700; }
-.settings-provider-select, #settings-base-url { width: 100%; min-height: 34px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 11px; }
-.settings-provider-select:focus, #settings-base-url:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.settings-provider-select, #settings-base-url, #settings-secondary-base-url, #settings-secondary-model { width: 100%; min-height: 34px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 11px; }
+.settings-provider-select:focus, #settings-base-url:focus, #settings-secondary-base-url:focus, #settings-secondary-model:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.settings-secondary-fallback { display: grid; gap: 7px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.settings-secondary-fallback .settings-field-label { margin: 0; color: var(--text-dim); font-size: 9px; letter-spacing: .08em; }
 .settings-key-row { display: flex; gap: 7px; }
 .settings-input-wrap { display: flex; min-width: 0; flex: 1; align-items: center; gap: 7px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text-dim); transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease; }
 .settings-input-wrap:focus-within { border-color: var(--accent); background: var(--surface-raised); box-shadow: 0 0 0 3px var(--accent-soft); }
