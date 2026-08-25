@@ -31,6 +31,31 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
     };
   }, []);
 
+  // Attach the stream after React has mounted the video element. Setting
+  // srcObject immediately after setIsCameraActive can race the conditional render.
+  useEffect(() => {
+    if (!isCameraActive || !streamRef.current || !videoRef.current) return;
+
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    video.srcObject = stream;
+
+    const startPlayback = () => {
+      video.play().catch(error => console.warn('Camera preview could not start:', error));
+    };
+
+    if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      startPlayback();
+    } else {
+      video.onloadedmetadata = startPlayback;
+    }
+
+    return () => {
+      video.onloadedmetadata = null;
+      if (video.srcObject === stream) video.srcObject = null;
+    };
+  }, [isCameraActive]);
+
   // File Upload Handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,10 +83,6 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
       });
       streamRef.current = stream;
       setIsCameraActive(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
     } catch (err: any) {
       console.warn('Camera access denied or unavailable:', err);
       setCameraError('Camera access not available. Please use file upload or sample presets.');
@@ -80,14 +101,20 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
 
   // Capture Frame from Camera
   const captureCameraFrame = () => {
-    if (!videoRef.current) return;
+    const video = videoRef.current;
+    if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !video.videoWidth || !video.videoHeight) {
+      setCameraError('Camera is still starting. Hold the phone steady for a moment, then capture again.');
+      return;
+    }
+
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth || 640;
-    canvas.height = videoRef.current.videoHeight || 480;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      setCameraError(null);
       setSelectedImage(dataUrl);
       setMimeType('image/jpeg');
       stopCamera();
