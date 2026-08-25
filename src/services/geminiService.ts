@@ -210,32 +210,9 @@ export async function extractVisualInsights(
   }
 
   try {
-    const prompt = `You are an on-device Smartphone Visual Assistant (L.A.S.A.).
-Analyze this uploaded image (which may be a class notice, exam circular, event poster, syllabus, or handwritten note).
-Extract all actionable events, deadlines, titles, dates, and suggested next steps.
-
-Return strictly a valid JSON object matching this TypeScript interface without markdown wrappers:
-{
-  "title": string, // brief title of what the image is
-  "summary": string, // 1-2 sentence concise summary
-  "extractedDates": string[], // ISO format YYYY-MM-DD or standard date string
-  "extractedEvents": [
-    {
-      "id": string,
-      "title": string,
-      "date": string, // YYYY-MM-DD
-      "time": string, // e.g. "14:00" or empty
-      "location": string, // e.g. "Hall A" or empty
-      "category": "exam" | "assignment" | "workshop" | "competition" | "general",
-      "description": string,
-      "actionSuggested": string[]
-    }
-  ],
-      "actionItems": string[],
-      "keyFacts": string[],
-      "recommendedActions": string[],
-      "followUpSuggestions": string[]
-}`;
+    const prompt = `Read this image as L.A.S.A. and extract only information visible in it. Return one valid JSON object, with no markdown or commentary, using this shape:
+{"title":"short image title","summary":"1-2 sentence summary","extractedDates":["YYYY-MM-DD"],"extractedEvents":[{"id":"event-1","title":"event","date":"YYYY-MM-DD","time":"","location":"","category":"exam|assignment|workshop|competition|general","description":"","actionSuggested":["..."]}],"actionItems":["..."],"keyFacts":["..."],"recommendedActions":["..."],"followUpSuggestions":["..."]}
+Use empty arrays when nothing is visible. Do not guess missing dates, places, or tasks.`;
 
     const imagePart = {
       inlineData: {
