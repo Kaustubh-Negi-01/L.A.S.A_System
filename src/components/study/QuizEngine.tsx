@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { QuizQuestion, QuizResult } from '../../types';
 import { useSharedContext } from '../../context/SharedContext';
 import { generateQuiz, evaluateQuizAndAdapt } from '../../services/geminiService';
+import { evaluateMockQuiz, generateMockQuiz } from '../../services/mockData';
 
 interface QuizEngineProps {
   subject: string;
@@ -48,7 +49,8 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           setQuestions(fetched);
         }
       } catch (err) {
-        console.error('Quiz generation error:', err);
+        console.error('Quiz generation error; using local fallback:', err);
+        if (isMounted) setQuestions(generateMockQuiz(subject, topic));
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -117,7 +119,10 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
       recordQuizResult(evaluation);
       onFinishQuiz(evaluation);
     } catch (err) {
-      console.error('Quiz evaluation error:', err);
+      console.error('Quiz evaluation error; using local analysis:', err);
+      const evaluation = evaluateMockQuiz(subject, studyPlanId, questions, selectedAnswers);
+      recordQuizResult(evaluation);
+      onFinishQuiz(evaluation);
     } finally {
       setIsSubmitting(false);
     }

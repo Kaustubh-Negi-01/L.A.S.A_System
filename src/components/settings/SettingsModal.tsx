@@ -82,10 +82,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const selectableModels = (() => {
     const current = inputModel.trim();
     if (current && !availableModels.some(model => model.id === current)) {
-      return [{ id: current, label: current }, ...availableModels];
+      return [{ id: current, label: 'Model 1' }, ...availableModels];
     }
     return availableModels;
   })();
+  const modelAlias = (modelId: string) => {
+    const index = selectableModels.findIndex(model => model.id === modelId);
+    return `Model ${index >= 0 ? index + 1 : 1}`;
+  };
 
   if (!isOpen) return null;
 
@@ -95,7 +99,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const statusTitle = aiMode === 'simulation'
     ? 'Local Core AI Simulation active'
     : activeCredential
-      ? `${providerLabel} · ${inputModel || 'model not selected'}`
+      ? `${providerLabel} · ${modelAlias(inputModel)}`
       : secondaryCredential
         ? 'Primary unavailable · secondary fallback active'
         : 'Primary provider unavailable — add an API key';
@@ -249,8 +253,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
           <div className="settings-secondary-fallback">
             <div className="settings-field-label">SECONDARY FALLBACK · GROQ</div>
-            <input id="settings-secondary-base-url" type="url" value={inputSecondaryBaseUrl} onChange={event => setInputSecondaryBaseUrl(event.target.value)} aria-label="Secondary fallback base URL" />
-            <input id="settings-secondary-model" type="text" value={inputSecondaryModel} onChange={event => setInputSecondaryModel(event.target.value)} aria-label="Secondary fallback model" />
+            <input id="settings-secondary-base-url" type="password" value={inputSecondaryBaseUrl} onChange={event => setInputSecondaryBaseUrl(event.target.value)} placeholder="Provider endpoint (hidden)" aria-label="Secondary fallback base URL" />
+            <input id="settings-secondary-model" type="password" value={inputSecondaryModel} onChange={event => setInputSecondaryModel(event.target.value)} placeholder="Model identifier (hidden)" aria-label="Secondary fallback model" />
             <div className="settings-input-wrap"><Key size={13} /><input id="settings-secondary-api-key" type="password" placeholder="Optional secondary API key" value={inputSecondaryKey} onChange={event => setInputSecondaryKey(event.target.value)} aria-label="Secondary fallback API key" /></div>
             <span className="settings-field-hint">Used only when the primary provider fails. The selected Qwen model supports text, image understanding, and JSON output.</span>
           </div>
@@ -260,7 +264,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           <div className="settings-section-label"><span>MODEL DISCOVERY</span><span className="settings-section-index">01</span></div>
           <div className="settings-model-row">
             <select id="settings-model" className="settings-provider-select" value={inputModel} onChange={event => setInputModel(event.target.value)} aria-label="Select model">
-              {selectableModels.length === 0 ? <option value={inputModel}>{inputModel || 'Discover models first'}</option> : selectableModels.map(model => <option value={model.id} key={model.id}>{model.label}</option>)}
+              {selectableModels.length === 0 ? <option value={inputModel}>{inputModel ? modelAlias(inputModel) : 'Discover models first'}</option> : selectableModels.map((model, index) => <option value={model.id} key={model.id}>{`Model ${index + 1}`}</option>)}
             </select>
             <button className="btn-secondary settings-discover-button" type="button" onClick={handleDiscoverModels} disabled={connectionState === 'loading'}><Search size={13} /> Discover</button>
           </div>
@@ -271,7 +275,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
         <div className="settings-section">
           <div className="settings-section-label"><span>EXECUTION STRATEGY</span><span className="settings-section-index">02</span></div>
           <div className="settings-strategy-grid">
-            <button type="button" onClick={() => setAiMode('gemini')} className={`settings-strategy ${aiMode !== 'simulation' ? 'is-active is-live' : ''}`} aria-pressed={aiMode !== 'simulation'} data-feedback="tap"><span className="settings-strategy-dot" /><span><strong>Live provider API</strong><small>{providerLabel} · {inputModel || 'choose a model'}</small></span></button>
+            <button type="button" onClick={() => setAiMode('gemini')} className={`settings-strategy ${aiMode !== 'simulation' ? 'is-active is-live' : ''}`} aria-pressed={aiMode !== 'simulation'} data-feedback="tap"><span className="settings-strategy-dot" /><span><strong>Live provider API</strong><small>{providerLabel} · {inputModel ? modelAlias(inputModel) : 'choose a model'}</small></span></button>
             <button type="button" onClick={() => setAiMode('simulation')} className={`settings-strategy ${aiMode === 'simulation' ? 'is-active' : ''}`} aria-pressed={aiMode === 'simulation'} data-feedback="tap"><span className="settings-strategy-dot" /><span><strong>Demo Simulation</strong><small>Private local engine</small></span></button>
           </div>
         </div>
@@ -291,7 +295,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
         <div className="settings-inspector">
           <button className="settings-inspector-trigger" type="button" onClick={() => setShowJson(current => !current)} aria-expanded={showJson} data-feedback="tap"><Database size={13} /><span>{showJson ? 'Hide live shared context' : 'Inspect live shared context'}</span><span className="settings-inspector-chevron">{showJson ? '−' : '+'}</span></button>
-          {showJson && <pre className="settings-json">{JSON.stringify({ tasksCount: tasks.length, eventsCount: events.length, plansCount: studyPlans.length, quizHistoryCount: quizHistory.length, provider: aiProvider, model: aiModel }, null, 2)}</pre>}
+          {showJson && <pre className="settings-json">{JSON.stringify({ tasksCount: tasks.length, eventsCount: events.length, plansCount: studyPlans.length, quizHistoryCount: quizHistory.length, provider: 'Configured provider', model: aiModel ? modelAlias(aiModel) : 'Not selected', endpoint: 'Hidden in UI' }, null, 2)}</pre>}
         </div>
 
         <footer className="settings-footer"><RotateCcw size={11} /> L.A.S.A. local assistant · configuration stays on this device</footer>

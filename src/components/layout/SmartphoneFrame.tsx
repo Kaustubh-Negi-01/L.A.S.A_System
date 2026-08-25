@@ -66,7 +66,7 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   const copy = sectionCopy[activeTab];
   const isLive = aiMode !== 'simulation' && Boolean(customApiKey || (aiProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY));
   const providerLabel = aiProvider === 'gemini' ? 'GEMINI' : 'GATEWAY';
-  const connectionTitle = isLive ? `${providerLabel} · ${aiModel || 'model'}` : 'Local simulation engine';
+  const connectionTitle = isLive ? `${providerLabel} · Model ${aiModel ? (aiModel.toLowerCase().includes('vision') ? '2' : '1') : '1'}` : 'Local simulation engine';
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;

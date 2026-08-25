@@ -507,6 +507,39 @@ Return only valid JSON:
 }
 
 // --- 4. Dynamic Quiz Generator ---
+function normalizeQuizQuestions(rawQuestions: unknown, req: QuizRequest): QuizQuestion[] {
+  const targetCount = Math.max(1, req.questionCount || 6);
+  const normalized: QuizQuestion[] = [];
+  const raw = Array.isArray(rawQuestions) ? rawQuestions : [];
+
+  raw.forEach((item: any, idx: number) => {
+    const question = typeof item?.question === 'string' ? item.question.trim() : '';
+    const options = Array.isArray(item?.options)
+      ? item.options.filter((option: unknown): option is string => typeof option === 'string' && Boolean(option.trim())).map((option: string) => option.trim()).slice(0, 4)
+      : [];
+    if (!question || options.length < 2) return;
+    while (options.length < 4) options.push(`Alternative ${String.fromCharCode(65 + options.length)}`);
+    const parsedIndex = Number.isInteger(item?.correctOptionIndex) ? item.correctOptionIndex : 0;
+    const correctOptionIndex = Math.max(0, Math.min(options.length - 1, parsedIndex));
+    normalized.push({
+      id: `q-${Date.now()}-${idx}`,
+      question,
+      options,
+      correctOptionIndex,
+      explanation: typeof item?.explanation === 'string' && item.explanation.trim() ? item.explanation.trim() : 'Review the invariant, trace a small example, and compare the distractors against the stated conditions.',
+      topicTag: typeof item?.topicTag === 'string' && item.topicTag.trim() ? item.topicTag.trim() : req.topic
+    });
+  });
+
+  if (normalized.length < targetCount) {
+    const fallback = generateMockQuiz(req.subject, req.topic);
+    fallback.forEach(question => {
+      if (normalized.length < targetCount) normalized.push({ ...question, id: `q-${Date.now()}-${normalized.length}` });
+    });
+  }
+  return normalized.slice(0, targetCount);
+}
+
 export async function generateQuiz(
   req: QuizRequest,
   config?: AiConfig
@@ -535,7 +568,7 @@ Return strictly a valid JSON array of question objects without markdown tags:
     "id": "q1",
     "question": "Question text here?",
     "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correctOptionIndex": 0, // 0-indexed integer
+    "correctOptionIndex": 0,
     "explanation": "Clear explanation why this option is correct.",
     "topicTag": "${req.topic}"
   }
@@ -544,20 +577,12 @@ Return strictly a valid JSON array of question objects without markdown tags:
     const responseText = cleanJsonResponse(await generateText(activeConfig, prompt));
     const parsed = JSON.parse(responseText);
 
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map((q: any, idx: number) => ({
-        id: `q-${Date.now()}-${idx}`,
-        question: q.question,
-        options: Array.isArray(q.options) ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctOptionIndex: typeof q.correctOptionIndex === 'number' ? q.correctOptionIndex : 0,
-        explanation: q.explanation || 'Correct conceptual explanation.',
-        topicTag: q.topicTag || req.topic
-      }));
-    }
-    return generateMockQuiz(req.subject, req.topic);
+    const normalized = normalizeQuizQuestions(parsed, req);
+    if (normalized.length > 0) return normalized;
+    return generateMockQuiz(req.subject, req.topic).slice(0, Math.max(1, req.questionCount || 6));
   } catch (error) {
     console.warn('Gemini Quiz generation failed, falling back to mock:', error);
-    return generateMockQuiz(req.subject, req.topic);
+    return generateMockQuiz(req.subject, req.topic).slice(0, Math.max(1, req.questionCount || 6));
   }
 }
 
