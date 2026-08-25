@@ -1,12 +1,16 @@
 import { SharedAppState, Task, ExtractedEvent, StudyPlan, QuizResult, VisualScanResult, VisualFollowUpResponse, QuizQuestion, NextActionRecommendation, ConceptExplanation } from '../types';
+import { DEFAULT_PRIMARY_OPENAI_BASE_URL, DEFAULT_PRIMARY_OPENAI_MODEL, DEFAULT_SECONDARY_OPENAI_BASE_URL, DEFAULT_SECONDARY_OPENAI_MODEL } from './aiDefaults';
 
 export const initialDemoState: SharedAppState = {
   customApiKey: '',
   aiMode: 'simulation',
-  aiProvider: 'gemini',
-  aiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-  aiModel: 'gemini-1.5-flash',
+  aiProvider: 'openai-compatible',
+  aiBaseUrl: DEFAULT_PRIMARY_OPENAI_BASE_URL,
+  aiModel: DEFAULT_PRIMARY_OPENAI_MODEL,
   availableModels: [],
+  secondaryApiKey: '',
+  secondaryBaseUrl: DEFAULT_SECONDARY_OPENAI_BASE_URL,
+  secondaryModel: DEFAULT_SECONDARY_OPENAI_MODEL,
   tasks: [
     {
       id: 'task-1',

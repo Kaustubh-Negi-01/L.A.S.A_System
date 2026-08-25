@@ -78,7 +78,10 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
     ?.replace(/exam|midterm|mid-term|test|assessment/gi, '')
     .replace(/\s+/g, ' ')
     .trim() || scan.title;
-  const topicFact = scan.keyFacts?.find(fact => /^topics?\s*:/i.test(fact.trim()));
+  const topicFact = [
+    ...(scan.keyFacts || []),
+    primaryEvent?.description || ''
+  ].find(fact => /^topics?\s*:/i.test(fact.trim()));
   const studyTopic = topicFact?.replace(/^topics?\s*:\s*/i, '').trim() || studySubject;
   const scanFacts = (scan.keyFacts?.length ? scan.keyFacts : [
     scan.summary,

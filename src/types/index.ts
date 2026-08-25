@@ -151,6 +151,10 @@ export interface SharedAppState {
   aiBaseUrl: string;
   aiModel: string;
   availableModels: AiModelOption[];
+  /** Optional secondary OpenAI-compatible provider used only when the primary is unavailable. */
+  secondaryApiKey?: string;
+  secondaryBaseUrl?: string;
+  secondaryModel?: string;
 }
 
 // --- 5. AI Service Request & Response Types ---

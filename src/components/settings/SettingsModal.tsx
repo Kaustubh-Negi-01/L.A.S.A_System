@@ -3,6 +3,7 @@ import { X, Key, ShieldCheck, Cpu, Database, RefreshCw, CheckCircle, ArrowUpRigh
 import { useSharedContext } from '../../context/SharedContext';
 import { listAvailableModels, testAiConnection } from '../../services/geminiService';
 import { AiProvider } from '../../types';
+import { DEFAULT_PRIMARY_OPENAI_BASE_URL, DEFAULT_PRIMARY_OPENAI_MODEL, DEFAULT_SECONDARY_OPENAI_BASE_URL, DEFAULT_SECONDARY_OPENAI_MODEL } from '../../services/aiDefaults';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -30,6 +31,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     setAiBaseUrl,
     setAiModel,
     setAvailableModels,
+    secondaryApiKey,
+    secondaryBaseUrl,
+    secondaryModel,
+    setSecondaryApiKey,
+    setSecondaryBaseUrl,
+    setSecondaryModel,
     resetToDemoData,
     tasks,
     events,
@@ -41,6 +48,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [inputProvider, setInputProvider] = useState<AiProvider>(aiProvider);
   const [inputBaseUrl, setInputBaseUrl] = useState(aiBaseUrl);
   const [inputModel, setInputModel] = useState(aiModel);
+  const [inputSecondaryKey, setInputSecondaryKey] = useState(secondaryApiKey || '');
+  const [inputSecondaryBaseUrl, setInputSecondaryBaseUrl] = useState(secondaryBaseUrl || DEFAULT_SECONDARY_OPENAI_BASE_URL);
+  const [inputSecondaryModel, setInputSecondaryModel] = useState(secondaryModel || DEFAULT_SECONDARY_OPENAI_MODEL);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [connectionState, setConnectionState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [connectionMessage, setConnectionMessage] = useState('');
@@ -53,11 +63,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     if (!isOpen) return;
     setInputKey(customApiKey);
     setInputProvider(aiProvider);
-    setInputBaseUrl(aiBaseUrl || (aiProvider === 'gemini' ? GEMINI_BASE_URL : ''));
-    setInputModel(aiModel || (aiProvider === 'gemini' ? 'gemini-1.5-flash' : 'onetap-1'));
+    setInputBaseUrl(aiBaseUrl || (aiProvider === 'gemini' ? GEMINI_BASE_URL : DEFAULT_PRIMARY_OPENAI_BASE_URL));
+    setInputModel(aiModel || (aiProvider === 'gemini' ? 'gemini-1.5-flash' : DEFAULT_PRIMARY_OPENAI_MODEL));
+    setInputSecondaryKey(secondaryApiKey || '');
+    setInputSecondaryBaseUrl(secondaryBaseUrl || DEFAULT_SECONDARY_OPENAI_BASE_URL);
+    setInputSecondaryModel(secondaryModel || DEFAULT_SECONDARY_OPENAI_MODEL);
     setConnectionState('idle');
     setConnectionMessage('');
-  }, [isOpen, customApiKey, aiProvider, aiBaseUrl, aiModel]);
+  }, [isOpen, customApiKey, aiProvider, aiBaseUrl, aiModel, secondaryApiKey, secondaryBaseUrl, secondaryModel]);
 
   const updatePreference = (key: 'lasa-sound' | 'lasa-haptics', enabled: boolean) => {
     localStorage.setItem(key, enabled ? 'on' : 'off');
@@ -77,17 +90,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   if (!isOpen) return null;
 
   const activeCredential = Boolean(inputKey.trim() || (inputProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY));
+  const secondaryCredential = Boolean(inputSecondaryKey.trim());
   const providerLabel = providerLabels[inputProvider];
   const statusTitle = aiMode === 'simulation'
-    ? 'Demo Simulation Engine active'
+    ? activeCredential ? 'Demo Simulation Engine active' : 'Demo Simulation · primary unavailable'
     : activeCredential
       ? `${providerLabel} · ${inputModel || 'model not selected'}`
-      : 'Live provider ready — add an API key';
+      : secondaryCredential
+        ? 'Primary unavailable · secondary fallback active'
+        : 'Primary provider unavailable — add an API key';
   const statusCopy = aiMode === 'simulation'
-    ? 'Fast, private, zero-key mode for offline evaluation.'
+    ? activeCredential ? 'Fast, private, zero-key mode for offline evaluation.' : 'Primary API is not configured. Enter your API key or use Demo Simulation while waiting for the original release build.'
     : activeCredential
-      ? 'Selected provider and model will be used across scanner, study, quiz, and productivity actions.'
-      : 'Add a provider key, discover models, and select one to enable live inference.';
+      ? 'Primary provider is configured for scanner, study, quiz, and productivity actions; the secondary key is used only if it fails.'
+      : secondaryCredential
+        ? 'L.A.S.A. will use the secondary provider until the primary becomes available.'
+        : 'Enter the primary API key, add a secondary fallback key, or use Demo Simulation while waiting for the original release build.';
 
   const handleProviderChange = (provider: AiProvider) => {
     setInputProvider(provider);
@@ -97,8 +115,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
       setInputBaseUrl(GEMINI_BASE_URL);
       setInputModel('gemini-1.5-flash');
     } else {
-      setInputBaseUrl('');
-      setInputModel('');
+      setInputBaseUrl(DEFAULT_PRIMARY_OPENAI_BASE_URL);
+      setInputModel(DEFAULT_PRIMARY_OPENAI_MODEL);
     }
   };
 
@@ -107,7 +125,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     mode: 'gemini' as const,
     provider: inputProvider,
     baseUrl: inputBaseUrl.trim(),
-    model: inputModel.trim()
+    model: inputModel.trim(),
+    secondaryApiKey: inputSecondaryKey.trim(),
+    secondaryBaseUrl: inputSecondaryBaseUrl.trim(),
+    secondaryModel: inputSecondaryModel.trim()
   });
 
   const handleDiscoverModels = async () => {
@@ -141,7 +162,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     setAiProvider(inputProvider);
     setAiBaseUrl(inputBaseUrl.trim());
     setAiModel(inputModel.trim());
-    if (trimmedKey || (inputProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY)) {
+    setSecondaryApiKey(inputSecondaryKey.trim());
+    setSecondaryBaseUrl(inputSecondaryBaseUrl.trim());
+    setSecondaryModel(inputSecondaryModel.trim());
+    if (trimmedKey || inputSecondaryKey.trim() || (inputProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY)) {
       setAiMode('gemini');
     }
   };
@@ -222,6 +246,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <button className="btn-primary settings-save-button" type="button" onClick={handleSave} data-feedback="confirm">{savedSuccess ? <><CheckCircle size={15} /> Saved</> : 'Save'}</button>
           </div>
           <span className="settings-field-hint">Stored locally in this prototype. Keys are sent directly from this browser to the selected provider; never use a production secret here.</span>
+
+          <div className="settings-secondary-fallback">
+            <div className="settings-field-label">SECONDARY FALLBACK · GROQ</div>
+            <input id="settings-secondary-base-url" type="url" value={inputSecondaryBaseUrl} onChange={event => setInputSecondaryBaseUrl(event.target.value)} aria-label="Secondary fallback base URL" />
+            <input id="settings-secondary-model" type="text" value={inputSecondaryModel} onChange={event => setInputSecondaryModel(event.target.value)} aria-label="Secondary fallback model" />
+            <div className="settings-input-wrap"><Key size={13} /><input id="settings-secondary-api-key" type="password" placeholder="Optional secondary API key" value={inputSecondaryKey} onChange={event => setInputSecondaryKey(event.target.value)} aria-label="Secondary fallback API key" /></div>
+            <span className="settings-field-hint">Used only when the primary provider fails. The selected Qwen model supports text, image understanding, and JSON output.</span>
+          </div>
         </div>
 
         <div className="settings-section">

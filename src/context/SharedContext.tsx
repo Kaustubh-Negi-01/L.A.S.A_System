@@ -46,6 +46,9 @@ interface SharedContextValue extends SharedAppState {
   setAiBaseUrl: (url: string) => void;
   setAiModel: (model: string) => void;
   setAvailableModels: (models: SharedAppState['availableModels']) => void;
+  setSecondaryApiKey: (key: string) => void;
+  setSecondaryBaseUrl: (url: string) => void;
+  setSecondaryModel: (model: string) => void;
   getAiConfig: () => AiConfig;
   resetToDemoData: () => void;
 }
@@ -115,7 +118,7 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const generatedSteps = await breakdownTask(
         targetTask.title,
         targetTask.description,
-        getAiConfig(state.customApiKey, state.aiMode, state.aiProvider, state.aiBaseUrl, state.aiModel)
+        getAiConfig(state.customApiKey, state.aiMode, state.aiProvider, state.aiBaseUrl, state.aiModel, state.secondaryApiKey, state.secondaryBaseUrl, state.secondaryModel)
       );
       setState(prev => ({
         ...prev,
@@ -426,13 +429,28 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setState(prev => ({ ...prev, availableModels: models }));
   };
 
+  const setSecondaryApiKey = (key: string) => {
+    setState(prev => ({ ...prev, secondaryApiKey: key }));
+  };
+
+  const setSecondaryBaseUrl = (url: string) => {
+    setState(prev => ({ ...prev, secondaryBaseUrl: url }));
+  };
+
+  const setSecondaryModel = (model: string) => {
+    setState(prev => ({ ...prev, secondaryModel: model }));
+  };
+
   const getCurrentAiConfig = useCallback(() => getAiConfig(
     state.customApiKey,
     state.aiMode,
     state.aiProvider,
     state.aiBaseUrl,
-    state.aiModel
-  ), [state.customApiKey, state.aiMode, state.aiProvider, state.aiBaseUrl, state.aiModel]);
+    state.aiModel,
+    state.secondaryApiKey,
+    state.secondaryBaseUrl,
+    state.secondaryModel
+  ), [state.customApiKey, state.aiMode, state.aiProvider, state.aiBaseUrl, state.aiModel, state.secondaryApiKey, state.secondaryBaseUrl, state.secondaryModel]);
 
   const resetToDemoData = () => {
     setState(initialDemoState);
@@ -465,6 +483,9 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setAiBaseUrl,
         setAiModel,
         setAvailableModels,
+        setSecondaryApiKey,
+        setSecondaryBaseUrl,
+        setSecondaryModel,
         getAiConfig: getCurrentAiConfig,
         resetToDemoData
       }}

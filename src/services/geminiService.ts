@@ -16,6 +16,12 @@ import {
   AiModelOption,
 } from '../types';
 import {
+  DEFAULT_PRIMARY_OPENAI_BASE_URL,
+  DEFAULT_PRIMARY_OPENAI_MODEL,
+  DEFAULT_SECONDARY_OPENAI_BASE_URL,
+  DEFAULT_SECONDARY_OPENAI_MODEL
+} from './aiDefaults';
+import {
   generateMockVisualInsights,
   generateMockVisualFollowUp,
   generateMockStudyPlan,
@@ -37,6 +43,9 @@ export interface AiConfig {
   provider: AiProvider;
   baseUrl: string;
   model: string;
+  secondaryApiKey: string;
+  secondaryBaseUrl: string;
+  secondaryModel: string;
 }
 
 const DEFAULT_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
@@ -85,15 +94,21 @@ export function getAiConfig(
   mode: AiMode = 'gemini',
   provider: AiProvider = 'gemini',
   baseUrl: string = DEFAULT_GEMINI_BASE_URL,
-  model: string = DEFAULT_GEMINI_MODEL
+  model: string = DEFAULT_GEMINI_MODEL,
+  secondaryApiKey: string = '',
+  secondaryBaseUrl: string = DEFAULT_SECONDARY_OPENAI_BASE_URL,
+  secondaryModel: string = DEFAULT_SECONDARY_OPENAI_MODEL
 ): AiConfig {
   const apiKey = getActiveApiKey(customKey, mode, provider);
   return {
     apiKey,
     mode,
     provider,
-    baseUrl: trimBaseUrl(baseUrl || (provider === 'gemini' ? DEFAULT_GEMINI_BASE_URL : '')),
-    model: model.trim() || (provider === 'gemini' ? DEFAULT_GEMINI_MODEL : 'onetap-1')
+    baseUrl: trimBaseUrl(baseUrl || (provider === 'gemini' ? DEFAULT_GEMINI_BASE_URL : DEFAULT_PRIMARY_OPENAI_BASE_URL)),
+    model: model.trim() || (provider === 'gemini' ? DEFAULT_GEMINI_MODEL : DEFAULT_PRIMARY_OPENAI_MODEL),
+    secondaryApiKey: secondaryApiKey.trim(),
+    secondaryBaseUrl: trimBaseUrl(secondaryBaseUrl || DEFAULT_SECONDARY_OPENAI_BASE_URL),
+    secondaryModel: secondaryModel.trim() || DEFAULT_SECONDARY_OPENAI_MODEL
   };
 }
 
@@ -145,7 +160,11 @@ type GeminiImagePart = { inlineData: { data: string; mimeType: string } };
 
 type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> };
 
-async function generateText(config: AiConfig, prompt: string, imagePart?: GeminiImagePart): Promise<string> {
+function hasLiveCredentials(config: AiConfig): boolean {
+  return config.mode !== 'simulation' && Boolean(config.apiKey.trim() || config.secondaryApiKey.trim());
+}
+
+async function generateTextOnce(config: AiConfig, prompt: string, imagePart?: GeminiImagePart): Promise<string> {
   if (config.provider === 'gemini') {
     const genAI = new GoogleGenerativeAI(config.apiKey);
     const model = genAI.getGenerativeModel({ model: config.model.replace(/^models\//, '') });
@@ -175,8 +194,33 @@ async function generateText(config: AiConfig, prompt: string, imagePart?: Gemini
   return text;
 }
 
+async function generateText(config: AiConfig, prompt: string, imagePart?: GeminiImagePart): Promise<string> {
+  const secondaryConfig: AiConfig = {
+    ...config,
+    provider: 'openai-compatible',
+    apiKey: config.secondaryApiKey,
+    baseUrl: config.secondaryBaseUrl,
+    model: config.secondaryModel,
+    secondaryApiKey: '',
+    secondaryBaseUrl: '',
+    secondaryModel: ''
+  };
+
+  if (config.apiKey.trim()) {
+    try {
+      return await generateTextOnce(config, prompt, imagePart);
+    } catch (primaryError) {
+      if (!config.secondaryApiKey.trim()) throw primaryError;
+      console.warn('Primary AI provider unavailable; trying secondary provider.', primaryError);
+    }
+  }
+
+  if (config.secondaryApiKey.trim()) return generateTextOnce(secondaryConfig, prompt, imagePart);
+  throw new Error('Primary AI provider unavailable and no secondary API key is configured.');
+}
+
 export async function testAiConnection(config: AiConfig): Promise<string> {
-  if (!config.apiKey || config.mode === 'simulation') throw new Error('Add an API key and choose a live provider first.');
+  if (config.mode === 'simulation' || !hasLiveCredentials(config)) throw new Error('Primary AI provider unavailable. Enter an API key or use Demo Simulation while waiting for the original release build.');
   const response = await generateText(config, 'Reply with exactly OK.');
   return response.trim();
 }
@@ -204,7 +248,7 @@ export async function extractVisualInsights(
   const activeConfig = config ?? getAiConfig();
   const apiKey = activeConfig.apiKey;
   
-  if (!apiKey) {
+  if (!hasLiveCredentials(activeConfig)) {
     console.info('Using review-required fallback for Visual Insights (No API Key)');
     return generateMockVisualInsights(undefined, 'fallback');
   }
@@ -257,7 +301,7 @@ Use empty arrays when nothing is visible. Do not guess missing dates, places, or
 // Route that text through the selected provider so live mode still exercises the AI pipeline.
 export async function extractVisualInsightsFromText(sourceText: string, config?: AiConfig): Promise<VisualScanResult> {
   const activeConfig = config ?? getAiConfig();
-  if (!activeConfig.apiKey) return generateMockVisualInsights(sourceText);
+  if (!hasLiveCredentials(activeConfig)) return generateMockVisualInsights(sourceText);
 
   try {
     const prompt = `You are L.A.S.A. Understand & Act.
@@ -311,7 +355,7 @@ export async function answerVisualScanFollowUp(
   config?: AiConfig
 ): Promise<VisualFollowUpResponse> {
   const activeConfig = config ?? getAiConfig();
-  if (!activeConfig.apiKey) return generateMockVisualFollowUp(question, scan);
+  if (!hasLiveCredentials(activeConfig)) return generateMockVisualFollowUp(question, scan);
 
   try {
     const prompt = `You are L.A.S.A. Understand & Act, answering a follow-up about one scanned document. Stay grounded only in the scan context. Be concise but useful. If the user asks for an action, explain the first safe step and name the relevant destination.
@@ -348,7 +392,7 @@ export async function generateStudyPlan(
   const activeConfig = config ?? getAiConfig();
   const apiKey = activeConfig.apiKey;
 
-  if (!apiKey) {
+  if (!hasLiveCredentials(activeConfig)) {
     console.info('Using Mock Failover for Study Plan');
     return generateMockStudyPlan(req.subject, req.examDate, req.dailyMinutes, req.goal, req.knownWeaknesses);
   }
@@ -421,7 +465,7 @@ export async function generateFlashcards(
   config?: AiConfig
 ): Promise<Flashcard[]> {
   const activeConfig = config ?? getAiConfig();
-  if (!activeConfig.apiKey) return generateMockFlashcards(subject, topics);
+  if (!hasLiveCredentials(activeConfig)) return generateMockFlashcards(subject, topics);
 
   try {
     const prompt = `You are L.A.S.A. AI Study Buddy.
@@ -457,7 +501,7 @@ export async function generateQuiz(
   const activeConfig = config ?? getAiConfig();
   const apiKey = activeConfig.apiKey;
 
-  if (!apiKey) {
+  if (!hasLiveCredentials(activeConfig)) {
     console.info('Using Mock Failover for Quiz Generation');
     return generateMockQuiz(req.subject, req.topic);
   }
@@ -512,7 +556,7 @@ export async function evaluateQuizAndAdapt(
   const activeConfig = config ?? getAiConfig();
   const apiKey = activeConfig.apiKey;
 
-  if (!apiKey) {
+  if (!hasLiveCredentials(activeConfig)) {
     console.info('Using Mock Failover for Quiz Evaluation');
     return evaluateMockQuiz(req.subject, req.studyPlanId, req.questions, req.userAnswers);
   }
@@ -584,7 +628,7 @@ export async function explainConcept(
   const activeConfig = config ?? getAiConfig();
   const apiKey = activeConfig.apiKey;
 
-  if (!apiKey) {
+  if (!hasLiveCredentials(activeConfig)) {
     return generateMockConceptExplanation(topic, subject);
   }
 
@@ -644,7 +688,7 @@ export async function breakdownTask(
   const activeConfig = config ?? getAiConfig();
   const apiKey = activeConfig.apiKey;
 
-  if (!apiKey) {
+  if (!hasLiveCredentials(activeConfig)) {
     return generateMockTaskBreakdown(taskTitle);
   }
 
@@ -686,7 +730,7 @@ export async function recommendNextAction(
   const activeConfig = config ?? getAiConfig();
   const apiKey = activeConfig.apiKey;
 
-  if (!apiKey) {
+  if (!hasLiveCredentials(activeConfig)) {
     return generateMockNextAction(state);
   }
 
