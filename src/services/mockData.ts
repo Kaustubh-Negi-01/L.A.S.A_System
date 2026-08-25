@@ -380,13 +380,17 @@ export function generateMockStudyPlan(
   const daysDiff = Math.max(1, Math.ceil((new Date(examDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
   
   const sampleTopicsMap: { [k: string]: string[] } = {
+    'odoo': ['Odoo workflow, records, and ownership', 'Models, views, and access rules', 'Automation and integration data flow', 'Demo scenario, validation, and recovery', 'Judge-ready evidence and submission checklist'],
+    'hackathon': ['Problem statement and target user', 'End-to-end MVP workflow', 'AI integration and fallback behavior', 'Edge cases, testing, and privacy', 'Demo narrative and submission checklist'],
+    'iqoo': ['iQOO user scenario and device context', 'On-device AI and NPU placement', 'Assistant workflow and touch interactions', 'Performance, privacy, and offline behavior', 'Demo evidence and future Android integration'],
     'data structures': ['Arrays & Linked Lists', 'Trees & Binary Search Trees', 'Graphs & Shortest Path', 'Dynamic Programming Patterns', 'Heap & Priority Queues'],
     'operating systems': ['Process Synchronization & Mutex', 'Deadlock Detection & Banker\'s Algo', 'Virtual Memory & Page Faults', 'File Systems & Disk Scheduling', 'CPU Scheduling Algorithms'],
     'computer networks': ['OSI & TCP/IP Stack', 'Routing Algorithms (Dijkstra, Bellman-Ford)', 'Transport Layer (TCP, UDP, Flow Control)', 'DNS, HTTP/HTTPS, WebSockets', 'Network Security & Encryption'],
     'machine learning': ['Linear & Logistic Regression', 'Support Vector Machines & Trees', 'Neural Networks & Backprop', 'Overfitting, Regularization & Tuning', 'Evaluation Metrics (ROC, F1, Loss)']
   };
 
-  let chosenTopics = ['Core Principles & Fundamentals', 'Intermediate Problem Solving', 'Advanced Scenarios & Edge Cases', 'Rapid Comprehensive Revision'];
+  const subjectLabel = subject.trim() || 'the subject';
+  let chosenTopics = [`${subjectLabel}: core concepts and success criteria`, `${subjectLabel}: worked scenario and decision flow`, `${subjectLabel}: edge cases, testing, and recovery`, `${subjectLabel}: applied practice and revision`];
   const matchedKey = Object.keys(sampleTopicsMap).find(k => subject.toLowerCase().includes(k));
   if (matchedKey) {
     chosenTopics = sampleTopicsMap[matchedKey];

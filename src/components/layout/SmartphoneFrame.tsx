@@ -53,7 +53,7 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   onSwipeUpHome,
   onNavigateToTab
 }) => {
-  const { customApiKey, aiMode, aiProvider, aiModel, resetToDemoData } = useSharedContext();
+  const { customApiKey, secondaryApiKey, aiMode, aiProvider, aiModel, resetToDemoData } = useSharedContext();
   const [currentTime, setCurrentTime] = useState<string>('09:41');
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [isResetting, setIsResetting] = useState(false);
@@ -64,9 +64,15 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   const phoneRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number; target: EventTarget | null } | null>(null);
   const copy = sectionCopy[activeTab];
-  const isLive = aiMode !== 'simulation' && Boolean(customApiKey || (aiProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY));
+  const hasPrimary = Boolean(customApiKey || (aiProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY));
+  const hasSecondary = Boolean(secondaryApiKey);
+  const isLive = aiMode !== 'simulation' && (hasPrimary || hasSecondary);
   const providerLabel = aiProvider === 'gemini' ? 'GEMINI' : 'GATEWAY';
-  const connectionTitle = isLive ? `${providerLabel} · Model ${aiModel ? (aiModel.toLowerCase().includes('vision') ? '2' : '1') : '1'}` : 'Local simulation engine';
+  const connectionTitle = hasPrimary
+    ? `${providerLabel} · Model ${aiModel ? (aiModel.toLowerCase().includes('vision') ? '2' : '1') : '1'}`
+    : hasSecondary && aiMode !== 'simulation'
+      ? 'FALLBACK · Model 2'
+      : 'Local simulation engine';
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;

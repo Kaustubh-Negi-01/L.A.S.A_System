@@ -30,7 +30,7 @@ interface StudyDashboardProps {
 }
 
 export const StudyDashboard: React.FC<StudyDashboardProps> = ({ initialTopic, autoStartQuiz = false, onLaunchHandled }) => {
-  const { studyPlans, activeStudyPlanId, setActiveStudyPlan, toggleMilestone, quizHistory } = useSharedContext();
+  const { studyPlans, activeStudyPlanId, setActiveStudyPlan, toggleMilestone, quizHistory, aiMode, customApiKey, secondaryApiKey, aiProvider } = useSharedContext();
   
   const [viewState, setViewState] = useState<'dashboard' | 'create_plan' | 'quiz' | 'analysis'>('dashboard');
   const [selectedTopicForQuiz, setSelectedTopicForQuiz] = useState<string>('');
@@ -38,6 +38,8 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({ initialTopic, au
   const [explainingTopic, setExplainingTopic] = useState<string | null>(null);
 
   const activePlan = studyPlans.find(p => p.id === activeStudyPlanId) || studyPlans[0];
+  const hasPrimaryProvider = Boolean(customApiKey || (aiProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY));
+  const learningCycleLabel = aiMode === 'simulation' ? 'LOCAL' : hasPrimaryProvider ? 'LIVE' : secondaryApiKey ? 'FALLBACK' : 'READY';
 
   useEffect(() => {
     if (!autoStartQuiz || !activePlan) return;
@@ -122,7 +124,7 @@ export const StudyDashboard: React.FC<StudyDashboardProps> = ({ initialTopic, au
           <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-cyan)', letterSpacing: '0.8px' }}>
             ADAPTIVE LEARNING CYCLE
           </span>
-          <span className="badge badge-purple">LIVE</span>
+          <span className={`badge ${learningCycleLabel === 'LIVE' ? 'badge-purple' : learningCycleLabel === 'FALLBACK' ? 'badge-amber' : 'badge-cyan'}`}>{learningCycleLabel}</span>
         </div>
         <div
           style={{

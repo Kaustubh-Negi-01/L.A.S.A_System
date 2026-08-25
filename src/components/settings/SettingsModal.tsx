@@ -139,21 +139,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     setConnectionState('loading');
     setConnectionMessage('Discovering available models...');
     try {
-      const models = await listAvailableModels(buildConfig());
-      setAvailableModels(models);
+      const primaryConfig = buildConfig();
+      const discoveryConfig = inputKey.trim() || inputProvider === 'gemini'
+        ? primaryConfig
+        : {
+            ...primaryConfig,
+            apiKey: inputSecondaryKey.trim(),
+            baseUrl: inputSecondaryBaseUrl.trim(),
+            model: inputSecondaryModel.trim(),
+            secondaryApiKey: '',
+            secondaryBaseUrl: '',
+            secondaryModel: ''
+          };
+      const models = await listAvailableModels(discoveryConfig);
+      const usingSecondaryOnly = !inputKey.trim() && inputProvider !== 'gemini';
       const discoveredModel = models.length > 0 && !models.some(model => model.id === inputModel)
         ? models[0].id
         : inputModel.trim();
       if (models.length > 0) {
-        setInputModel(discoveredModel);
-        setCustomApiKey(inputKey.trim());
-        setAiProvider(inputProvider);
-        setAiBaseUrl(inputBaseUrl.trim());
-        setAiModel(discoveredModel);
-        setAiMode('gemini');
+        if (usingSecondaryOnly) {
+          setInputSecondaryModel(discoveredModel);
+          setSecondaryModel(discoveredModel);
+          setAvailableModels([]);
+        } else {
+          setAvailableModels(models);
+          setInputModel(discoveredModel);
+          setCustomApiKey(inputKey.trim());
+          setAiProvider(inputProvider);
+          setAiBaseUrl(inputBaseUrl.trim());
+          setAiModel(discoveredModel);
+          setAiMode('gemini');
+        }
       }
       setConnectionState('success');
-      setConnectionMessage(models.length ? `${models.length} model${models.length === 1 ? '' : 's'} found.` : 'No models returned by this provider.');
+      const discoveryLabel = inputKey.trim() || inputProvider === 'gemini' ? 'primary provider' : 'secondary fallback';
+      setConnectionMessage(models.length ? `${models.length} model${models.length === 1 ? '' : 's'} found from ${discoveryLabel}.` : `No models returned by the ${discoveryLabel}.`);
     } catch (error) {
       setConnectionState('error');
       setConnectionMessage(error instanceof Error ? error.message : 'Model discovery failed. Check the key and base URL.');
@@ -268,7 +288,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             </select>
             <button className="btn-secondary settings-discover-button" type="button" onClick={handleDiscoverModels} disabled={connectionState === 'loading'}><Search size={13} /> Discover</button>
           </div>
-          <div className="settings-model-actions"><button className="btn-secondary settings-test-button" type="button" onClick={handleTestConnection} disabled={connectionState === 'loading' || !inputKey.trim() && !(inputProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY)}><PlugZap size={13} /> Test connection</button>{connectionMessage && <span className={`settings-connection-message ${connectionState}`}>{connectionMessage}</span>}</div>
+          <div className="settings-model-actions"><button className="btn-secondary settings-test-button" type="button" onClick={handleTestConnection} disabled={connectionState === 'loading' || (!inputKey.trim() && !inputSecondaryKey.trim() && !(inputProvider === 'gemini' && import.meta.env.VITE_GEMINI_API_KEY))}><PlugZap size={13} /> Test connection</button>{connectionMessage && <span className={`settings-connection-message ${connectionState}`}>{connectionMessage}</span>}</div>
           <span className="settings-field-hint">The selected model is used across visual understanding, study planning, quizzes, explanations, task breakdown, and next-action recommendations. For image uploads, choose a model that advertises vision or multimodal support; text-only models use a safe extraction fallback.</span>
         </div>
 
