@@ -509,6 +509,9 @@ Return only valid JSON:
 // --- 4. Dynamic Quiz Generator ---
 function normalizeQuizQuestions(rawQuestions: unknown, req: QuizRequest): QuizQuestion[] {
   const targetCount = Math.max(1, req.questionCount || 6);
+  const isRetiredGenericTemplate = (question: string, options: string[]) =>
+    /which statement best captures the core mechanism/i.test(question) ||
+    options.some(option => /preserves a useful invariant while reducing the remaining work/i.test(option));
   const normalized: QuizQuestion[] = [];
   const raw = Array.isArray(rawQuestions) ? rawQuestions : [];
 
@@ -517,7 +520,7 @@ function normalizeQuizQuestions(rawQuestions: unknown, req: QuizRequest): QuizQu
     const options = Array.isArray(item?.options)
       ? item.options.filter((option: unknown): option is string => typeof option === 'string' && Boolean(option.trim())).map((option: string) => option.trim()).slice(0, 4)
       : [];
-    if (!question || options.length < 2) return;
+    if (!question || options.length < 2 || isRetiredGenericTemplate(question, options)) return;
     while (options.length < 4) options.push(`Alternative ${String.fromCharCode(65 + options.length)}`);
     const parsedIndex = Number.isInteger(item?.correctOptionIndex) ? item.correctOptionIndex : 0;
     const correctOptionIndex = Math.max(0, Math.min(options.length - 1, parsedIndex));
