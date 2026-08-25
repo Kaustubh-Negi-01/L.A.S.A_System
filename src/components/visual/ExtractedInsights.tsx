@@ -74,7 +74,12 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
   };
 
   const primaryEvent = scan.extractedEvents[0];
-  const studyTopic = primaryEvent?.title || scan.title;
+  const studySubject = primaryEvent?.title
+    ?.replace(/exam|midterm|mid-term|test|assessment/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim() || scan.title;
+  const topicFact = scan.keyFacts?.find(fact => /^topics?\s*:/i.test(fact.trim()));
+  const studyTopic = topicFact?.replace(/^topics?\s*:\s*/i, '').trim() || studySubject;
   const scanFacts = (scan.keyFacts?.length ? scan.keyFacts : [
     scan.summary,
     primaryEvent?.description,
@@ -139,7 +144,7 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
   };
 
   const handleCreateStudyPlan = async (autoStartQuiz = false) => {
-    const existingPlan = studyPlans.find(plan => plan.subject.trim().toLowerCase() === studyTopic.trim().toLowerCase());
+    const existingPlan = studyPlans.find(plan => plan.subject.trim().toLowerCase() === studySubject.trim().toLowerCase());
     if (existingPlan) {
       setActiveStudyPlan(existingPlan.id);
       setActionFeedback('Opened the existing study plan for this scan.');
@@ -150,7 +155,7 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
     setIsCreatingStudyPlan(true);
     try {
       const plan = await generateStudyPlan({
-        subject: studyTopic,
+        subject: studySubject,
         examDate: primaryEvent?.date || scan.extractedDates[0] || new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
         dailyMinutes: 45,
         goal: 'Prepare confidently from this scanned notice or assignment',
