@@ -6,7 +6,7 @@ import { ExtractedInsights } from './ExtractedInsights';
 import { VisualScanResult } from '../../types';
 
 interface VisualHubProps {
-  onNavigateToStudy: () => void;
+  onNavigateToStudy: (topic?: string, autoStartQuiz?: boolean) => void;
   onNavigateToProductivity: (taskId?: string) => void;
 }
 

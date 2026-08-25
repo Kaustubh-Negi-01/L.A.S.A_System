@@ -163,8 +163,8 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
                   justifyContent: 'space-between',
                   padding: '9px 12px',
                   borderRadius: '5px',
-                  background: isSelected ? 'rgba(0, 240, 255, 0.12)' : 'var(--surface-muted)',
-                  border: `1px solid ${isSelected ? 'var(--primary-cyan)' : 'var(--border-subtle)'}`,
+                  background: isSelected ? 'var(--accent-soft)' : 'var(--surface-muted)',
+                  border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border-subtle)'}`,
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
@@ -173,7 +173,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <FileText size={15} color={isSelected ? 'var(--primary-cyan)' : 'var(--text-muted)'} />
                   <div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? '#fff' : 'var(--text)' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? 'var(--text)' : 'var(--text)' }}>
                       {preset.name}
                     </div>
                     <div style={{ fontSize: '10px', color: 'var(--text-dim)' }}>
@@ -195,7 +195,7 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
             padding: '12px',
             borderRadius: '8px',
             background: '#040711',
-            border: '1px solid var(--primary-cyan)',
+            border: '1px solid var(--accent)',
             marginBottom: '14px',
             textAlign: 'center'
           }}

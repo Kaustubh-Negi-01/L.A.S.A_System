@@ -41,11 +41,20 @@ export interface VisualScanResult {
   imageUrl?: string;
   title: string;
   summary: string;
+  keyFacts?: string[];
   extractedDates: string[];
   extractedEvents: ExtractedEvent[];
   actionItems: string[];
+  recommendedActions?: string[];
+  followUpSuggestions?: string[];
   rawText?: string;
   scannedAt: string;
+}
+
+export interface VisualFollowUpResponse {
+  answer: string;
+  nextSteps: string[];
+  suggestedDestination?: 'tasks' | 'study' | 'calendar' | 'none';
 }
 
 // --- 3. Study Coach ---

@@ -1,4 +1,4 @@
-import { SharedAppState, Task, ExtractedEvent, StudyPlan, QuizResult, VisualScanResult, QuizQuestion, NextActionRecommendation, ConceptExplanation } from '../types';
+import { SharedAppState, Task, ExtractedEvent, StudyPlan, QuizResult, VisualScanResult, VisualFollowUpResponse, QuizQuestion, NextActionRecommendation, ConceptExplanation } from '../types';
 
 export const initialDemoState: SharedAppState = {
   customApiKey: '',
@@ -166,6 +166,41 @@ export const sampleImagePresets = [
     previewIcon: 'BookOpen'
   }
 ];
+
+export function generateMockVisualFollowUp(question: string, scan: VisualScanResult): VisualFollowUpResponse {
+  const normalized = question.toLowerCase();
+  const event = scan.extractedEvents[0];
+
+  if (normalized.includes('first') || normalized.includes('priorit')) {
+    return {
+      answer: `Start with the time-sensitive item: ${scan.actionItems[0] || 'review the notice details'}. Then confirm the deadline${event?.date ? ` on ${event.date}` : ''} and work through the remaining actions in order.`,
+      nextSteps: scan.actionItems.slice(0, 3),
+      suggestedDestination: 'tasks'
+    };
+  }
+
+  if (normalized.includes('study') || normalized.includes('prepare') || normalized.includes('exam')) {
+    return {
+      answer: `This scan points to a study or preparation workflow. Begin by identifying the assessed topic, then split the preparation into concept review, active recall, and a short practice check before the deadline.`,
+      nextSteps: ['Create a focused study plan', 'Review the detected topic', 'Take a diagnostic quiz'],
+      suggestedDestination: 'study'
+    };
+  }
+
+  if (normalized.includes('simpl') || normalized.includes('summary') || normalized.includes('mean')) {
+    return {
+      answer: `${scan.title} is mainly about ${scan.summary.toLowerCase()} The important takeaway is to act on the detected deadline and complete the extracted next steps rather than treating this as a reference-only document.`,
+      nextSteps: scan.keyFacts?.slice(0, 3) || [scan.summary],
+      suggestedDestination: 'none'
+    };
+  }
+
+  return {
+    answer: `The scan identified ${scan.actionItems.length || 'several'} actionable item(s)${event ? ` and a ${event.category} event${event.date ? ` on ${event.date}` : ''}` : ''}. I can help you turn them into tasks, a study workflow, or a calendar entry.`,
+    nextSteps: scan.recommendedActions?.slice(0, 3) || ['Add extracted actions to Tasks', 'Create a study plan', 'Review the calendar details'],
+    suggestedDestination: event?.category === 'exam' || event?.category === 'assignment' ? 'study' : 'tasks'
+  };
+}
 
 export function generateMockVisualInsights(hintText?: string): VisualScanResult {
   const isHackathon = hintText?.toLowerCase().includes('hackathon');

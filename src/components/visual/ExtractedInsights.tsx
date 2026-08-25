@@ -12,15 +12,23 @@ import {
   ListTodo,
   Share2,
   Copy,
-  Check
+  Check,
+  MessageCircle,
+  Send,
+  ListChecks,
+  BookOpenCheck,
+  CalendarPlus,
+  ClipboardCheck,
+  ChevronRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { VisualScanResult } from '../../types';
+import { VisualFollowUpResponse, VisualScanResult } from '../../types';
+import { answerVisualScanFollowUp, generateStudyPlan } from '../../services/geminiService';
 import { useSharedContext } from '../../context/SharedContext';
 
 interface ExtractedInsightsProps {
   scan: VisualScanResult;
-  onNavigateToStudy: () => void;
+  onNavigateToStudy: (topic?: string, autoStartQuiz?: boolean) => void;
   onNavigateToProductivity: (taskId?: string) => void;
   onScanAnother: () => void;
 }
@@ -31,9 +39,13 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
   onNavigateToProductivity,
   onScanAnother
 }) => {
-  const { dispatchScanToApp, tasks, addTaskFromScanAction, updateTask } = useSharedContext();
+  const { dispatchScanToApp, tasks, events, studyPlans, addTaskFromScanAction, updateTask, addEvent, addStudyPlan, setActiveStudyPlan, addScanActionsToTasks, getAiConfig } = useSharedContext();
   const [copied, setCopied] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [followUpQuestion, setFollowUpQuestion] = useState('');
+  const [followUpResponse, setFollowUpResponse] = useState<VisualFollowUpResponse | null>(null);
+  const [isFollowUpLoading, setIsFollowUpLoading] = useState(false);
+  const [isCreatingStudyPlan, setIsCreatingStudyPlan] = useState(false);
   const [dispatchResult, setDispatchResult] = useState<{
     dispatched: boolean;
     addedTasks: number;
@@ -62,6 +74,17 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
   };
 
   const primaryEvent = scan.extractedEvents[0];
+  const studyTopic = primaryEvent?.title || scan.title;
+  const scanFacts = (scan.keyFacts?.length ? scan.keyFacts : [
+    scan.summary,
+    primaryEvent?.description,
+    ...scan.actionItems.slice(0, 2)
+  ]).filter((fact): fact is string => Boolean(fact && fact.trim()));
+  const followUpSuggestions = scan.followUpSuggestions?.length ? scan.followUpSuggestions : [
+    'What should I do first?',
+    'Explain this in simpler words',
+    'What do I need to prepare?'
+  ];
   const wasAlreadyInSync = dispatchResult.dispatched
     && dispatchResult.addedTasks === 0
     && dispatchResult.addedEvents === 0
@@ -85,6 +108,81 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
     if (!taskId) return;
     setActionFeedback('Added to Productivity tasks.');
     onNavigateToProductivity(taskId);
+  };
+
+  const handleAddAllTasks = () => {
+    const result = addScanActionsToTasks(scan);
+    const firstTaskId = result.taskIds[0];
+    setActionFeedback(result.addedTasks > 0 ? `Added ${result.addedTasks} action(s) to Productivity.` : 'All extracted actions are already in Productivity.');
+    if (firstTaskId) setTimeout(() => onNavigateToProductivity(firstTaskId), 250);
+  };
+
+  const handleAddEvent = () => {
+    if (!primaryEvent) {
+      setActionFeedback('No calendar event was detected in this scan.');
+      return;
+    }
+    const existing = events.find(event => event.id === primaryEvent.id
+      || (event.title === primaryEvent.title && event.date === primaryEvent.date));
+    if (existing) {
+      setActionFeedback('This event is already in Calendar.');
+      return;
+    }
+    const { id: _eventId, ...eventData } = primaryEvent;
+    addEvent(eventData);
+    setActionFeedback('Added the detected event to Calendar.');
+  };
+
+  const handleCreateStudyPlan = async (autoStartQuiz = false) => {
+    const existingPlan = studyPlans.find(plan => plan.subject.trim().toLowerCase() === studyTopic.trim().toLowerCase());
+    if (existingPlan) {
+      setActiveStudyPlan(existingPlan.id);
+      setActionFeedback('Opened the existing study plan for this scan.');
+      onNavigateToStudy(studyTopic, autoStartQuiz);
+      return;
+    }
+
+    setIsCreatingStudyPlan(true);
+    try {
+      const plan = await generateStudyPlan({
+        subject: studyTopic,
+        examDate: primaryEvent?.date || scan.extractedDates[0] || new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
+        dailyMinutes: 45,
+        goal: 'Prepare confidently from this scanned notice or assignment',
+        knownWeaknesses: scan.actionItems.slice(0, 3)
+      }, getAiConfig());
+      addStudyPlan(plan);
+      setActionFeedback('Study plan created and connected to this scan.');
+      onNavigateToStudy(studyTopic, autoStartQuiz);
+    } catch (error) {
+      console.warn('Scan study-plan action failed:', error);
+      setActionFeedback('Study plan could not be created yet. Try again or use Demo Simulation.');
+    } finally {
+      setIsCreatingStudyPlan(false);
+    }
+  };
+
+  const handleSubmitFollowUp = async (questionOverride?: string) => {
+    const question = (questionOverride ?? followUpQuestion).trim();
+    if (!question || isFollowUpLoading) return;
+    setFollowUpQuestion(question);
+    setIsFollowUpLoading(true);
+    try {
+      const response = await answerVisualScanFollowUp(question, scan, getAiConfig());
+      setFollowUpResponse(response);
+    } catch (error) {
+      console.warn('Scan follow-up action failed:', error);
+      setFollowUpResponse({ answer: 'I could not answer that right now. You can still use the managed actions below to turn this scan into tasks, a study plan, or a calendar event.', nextSteps: [], suggestedDestination: 'none' });
+    } finally {
+      setIsFollowUpLoading(false);
+    }
+  };
+
+  const handleFollowUpDestination = () => {
+    const destination = followUpResponse?.suggestedDestination;
+    if (destination === 'tasks') handleAddAllTasks();
+    else if (destination === 'study') void handleCreateStudyPlan();
+    else if (destination === 'calendar') handleAddEvent();
   };
 
   const handleShare = async () => {
@@ -149,6 +247,95 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: 1.45 }}>
           {scan.summary}
         </p>
+      </div>
+
+      {/* Immediate Scan Brief */}
+      <div className="scan-intelligence-panel" style={{ marginBottom: '14px' }}>
+        <div className="scan-intelligence-heading">
+          <div>
+            <span className="scan-intelligence-kicker">UNDERSTAND / NEXT BEST ACTION</span>
+            <strong>Here is what matters</strong>
+          </div>
+          <CheckCircle size={16} color="var(--accent)" />
+        </div>
+        <div className="scan-intelligence-facts">
+          {scanFacts.slice(0, 4).map((fact, index) => (
+            <div key={`${fact}-${index}`} className="scan-intelligence-fact">
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <p>{fact}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Managed Scan Actions */}
+      <div className="scan-managed-actions" style={{ marginBottom: '14px' }}>
+        <div className="scan-managed-actions-title">MANAGE THIS SCAN</div>
+        <div className="scan-managed-actions-grid">
+          <button type="button" onClick={handleAddAllTasks} className="scan-managed-action">
+            <ListChecks size={15} />
+            <span><strong>Add to Tasks</strong><small>Keep every action</small></span>
+            <ChevronRight size={13} />
+          </button>
+          <button type="button" onClick={() => void handleCreateStudyPlan()} className="scan-managed-action" disabled={isCreatingStudyPlan}>
+            <BookOpenCheck size={15} />
+            <span><strong>{isCreatingStudyPlan ? 'Building plan…' : 'Create Study Plan'}</strong><small>Explain, practise, adapt</small></span>
+            <ChevronRight size={13} />
+          </button>
+          <button type="button" onClick={handleAddEvent} className="scan-managed-action" disabled={!primaryEvent}>
+            <CalendarPlus size={15} />
+            <span><strong>Add to Calendar</strong><small>{primaryEvent ? 'Save detected date' : 'No event detected'}</small></span>
+            <ChevronRight size={13} />
+          </button>
+          <button type="button" onClick={() => void handleCreateStudyPlan(true)} className="scan-managed-action" disabled={isCreatingStudyPlan}>
+            <ClipboardCheck size={15} />
+            <span><strong>Generate Quiz</strong><small>Test this scan topic</small></span>
+            <ChevronRight size={13} />
+          </button>
+        </div>
+      </div>
+
+      {/* Contextual Follow-up */}
+      <div className="scan-follow-up-panel" style={{ marginBottom: '14px' }}>
+        <div className="scan-intelligence-heading">
+          <div>
+            <span className="scan-intelligence-kicker">ASK ABOUT THIS SCAN</span>
+            <strong>Keep the conversation grounded</strong>
+          </div>
+          <MessageCircle size={16} color="var(--accent)" />
+        </div>
+        <div className="scan-follow-up-suggestions">
+          {followUpSuggestions.slice(0, 3).map(suggestion => (
+            <button key={suggestion} type="button" onClick={() => void handleSubmitFollowUp(suggestion)}>{suggestion}</button>
+          ))}
+        </div>
+        <form className="scan-follow-up-form" onSubmit={(event) => { event.preventDefault(); void handleSubmitFollowUp(); }}>
+          <input
+            value={followUpQuestion}
+            onChange={(event) => setFollowUpQuestion(event.target.value)}
+            placeholder="Ask what to do next…"
+            aria-label="Ask a follow-up about this scan"
+          />
+          <button type="submit" aria-label="Send follow-up question" disabled={!followUpQuestion.trim() || isFollowUpLoading}>
+            {isFollowUpLoading ? <Sparkles size={14} className="animate-spin" /> : <Send size={14} />}
+          </button>
+        </form>
+        {isFollowUpLoading && <p className="scan-follow-up-status">L.A.S.A. is checking the scan context…</p>}
+        {followUpResponse && (
+          <div className="scan-follow-up-response" role="status" aria-live="polite">
+            <p>{followUpResponse.answer}</p>
+            {followUpResponse.nextSteps.length > 0 && (
+              <div className="scan-follow-up-next-steps">
+                {followUpResponse.nextSteps.map(step => <span key={step}>{step}</span>)}
+              </div>
+            )}
+            {followUpResponse.suggestedDestination && followUpResponse.suggestedDestination !== 'none' && (
+              <button type="button" className="scan-follow-up-destination" onClick={handleFollowUpDestination}>
+                Continue in {followUpResponse.suggestedDestination === 'tasks' ? 'Tasks' : followUpResponse.suggestedDestination === 'study' ? 'Study Coach' : 'Calendar'} <ArrowUpRight size={12} />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Extracted Event Card */}
@@ -315,7 +502,7 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
           <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
             <button
               className="btn-primary"
-              onClick={onNavigateToStudy}
+              onClick={() => onNavigateToStudy()}
               style={{ flex: 1, fontSize: '11px', padding: '6px 10px' }}
             >
               <GraduationCap size={13} />

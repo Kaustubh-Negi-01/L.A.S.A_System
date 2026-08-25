@@ -21,6 +21,7 @@ const AppContent: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
+  const [studyLaunchRequest, setStudyLaunchRequest] = useState<{ topic?: string; autoStartQuiz?: boolean } | null>(null);
 
   const navigateTo = useCallback((nextTab: AppTab) => {
     if (nextTab === activeTab && !isModeSelectionOpen || isTransitioning) return;
@@ -110,7 +111,10 @@ const AppContent: React.FC = () => {
 
           {!isModeSelectionOpen && activeTab === 'visual' && (
             <VisualHub
-              onNavigateToStudy={() => navigateTo('study')}
+              onNavigateToStudy={(topic, autoStartQuiz = false) => {
+                setStudyLaunchRequest({ topic, autoStartQuiz });
+                navigateTo('study');
+              }}
               onNavigateToProductivity={(taskId) => {
                 setFocusedTaskId(taskId || null);
                 navigateTo('productivity');
@@ -118,7 +122,13 @@ const AppContent: React.FC = () => {
             />
           )}
 
-          {!isModeSelectionOpen && activeTab === 'study' && <StudyDashboard />}
+          {!isModeSelectionOpen && activeTab === 'study' && (
+            <StudyDashboard
+              initialTopic={studyLaunchRequest?.topic}
+              autoStartQuiz={studyLaunchRequest?.autoStartQuiz}
+              onLaunchHandled={() => setStudyLaunchRequest(null)}
+            />
+          )}
 
           {!isModeSelectionOpen && activeTab === 'productivity' && (
             <ProductivityHub

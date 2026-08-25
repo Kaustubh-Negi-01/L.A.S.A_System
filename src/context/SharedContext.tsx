@@ -36,6 +36,7 @@ interface SharedContextValue extends SharedAppState {
   recordQuizResult: (result: QuizResult) => void;
   addScanResult: (scan: VisualScanResult) => void;
   addTaskFromScanAction: (scan: VisualScanResult, actionIndex: number) => string;
+  addScanActionsToTasks: (scan: VisualScanResult) => { addedTasks: number; taskIds: string[] };
   dispatchScanToApp: (scan: VisualScanResult) => { addedTasks: number; addedEvents: number; planCreated: boolean };
 
   // Settings & Reset
@@ -281,6 +282,43 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return id;
   };
 
+  const addScanActionsToTasks = (scan: VisualScanResult): { addedTasks: number; taskIds: string[] } => {
+    const taskIds: string[] = [];
+    let addedTasks = 0;
+    setState(prev => {
+      const newTasks: Task[] = scan.actionItems.flatMap((item, idx) => {
+        const existing = prev.tasks.find(task => task.sourceReferenceId === scan.id
+          && (task.sourceActionIndex === idx || task.title === item));
+        if (existing) {
+          taskIds.push(existing.id);
+          return [];
+        }
+        const id = `task-scan-${Date.now()}-${idx}`;
+        addedTasks += 1;
+        taskIds.push(id);
+        return [{
+          id,
+          title: item,
+          description: `Extracted from: ${scan.title}`,
+          priority: idx === 0 ? 'high' as const : 'medium' as const,
+          status: 'pending' as const,
+          dueDate: scan.extractedDates[0] || new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+          sourceModule: 'visual_scanner' as const,
+          sourceReferenceId: scan.id,
+          sourceActionIndex: idx,
+          createdAt: new Date().toISOString(),
+          steps: [
+            { id: `${id}-read`, title: 'Read notice details', isCompleted: true },
+            { id: `${id}-prepare`, title: 'Prepare required materials', isCompleted: false },
+            { id: `${id}-confirm`, title: 'Confirm completion', isCompleted: false }
+          ]
+        }];
+      });
+      return newTasks.length > 0 ? { ...prev, tasks: [...newTasks, ...prev.tasks] } : prev;
+    });
+    return { addedTasks, taskIds };
+  };
+
   // --- Cross-Mode Dispatcher (Understand & Act -> Calendar & Tasks & Study Plan) ---
   const dispatchScanToApp = (scan: VisualScanResult) => {
     let addedTasks = 0;
@@ -419,6 +457,7 @@ export const SharedProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         recordQuizResult,
         addScanResult,
         addTaskFromScanAction,
+        addScanActionsToTasks,
         dispatchScanToApp,
         setCustomApiKey,
         setAiMode,

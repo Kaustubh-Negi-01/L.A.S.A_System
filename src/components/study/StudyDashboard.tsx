@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   GraduationCap,
   Sparkles,
@@ -23,7 +23,13 @@ import { ConceptExplainerModal } from './ConceptExplainerModal';
 import { QuizResult } from '../../types';
 import { Lightbulb } from 'lucide-react';
 
-export const StudyDashboard: React.FC = () => {
+interface StudyDashboardProps {
+  initialTopic?: string;
+  autoStartQuiz?: boolean;
+  onLaunchHandled?: () => void;
+}
+
+export const StudyDashboard: React.FC<StudyDashboardProps> = ({ initialTopic, autoStartQuiz = false, onLaunchHandled }) => {
   const { studyPlans, activeStudyPlanId, setActiveStudyPlan, toggleMilestone, quizHistory } = useSharedContext();
   
   const [viewState, setViewState] = useState<'dashboard' | 'create_plan' | 'quiz' | 'analysis'>('dashboard');
@@ -32,6 +38,13 @@ export const StudyDashboard: React.FC = () => {
   const [explainingTopic, setExplainingTopic] = useState<string | null>(null);
 
   const activePlan = studyPlans.find(p => p.id === activeStudyPlanId) || studyPlans[0];
+
+  useEffect(() => {
+    if (!autoStartQuiz || !activePlan) return;
+    setSelectedTopicForQuiz(initialTopic || activePlan.subject);
+    setViewState('quiz');
+    onLaunchHandled?.();
+  }, [activePlan, autoStartQuiz, initialTopic, onLaunchHandled]);
 
   const handleStartQuiz = (topic: string) => {
     setSelectedTopicForQuiz(topic);
@@ -89,8 +102,10 @@ export const StudyDashboard: React.FC = () => {
 
   // 4. Main Study Dashboard View
   const completedMilestonesCount = activePlan ? activePlan.milestones.filter(m => m.completed).length : 0;
-  const totalMilestones = activePlan ? activePlan.milestones.length : 1;
-  const progressPercent = Math.round((completedMilestonesCount / totalMilestones) * 100);
+  const totalMilestones = activePlan ? Math.max(1, activePlan.milestones.length) : 1;
+  const progressPercent = activePlan && activePlan.milestones.length > 0
+    ? Math.round((completedMilestonesCount / activePlan.milestones.length) * 100)
+    : 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} className="animate-fade-in">
@@ -217,8 +232,8 @@ export const StudyDashboard: React.FC = () => {
               style={{
                 padding: '10px 12px',
                 borderRadius: '5px',
-                background: 'rgba(210, 117, 104, 0.08)',
-                border: '1px solid rgba(210, 117, 104, 0.25)',
+                background: 'var(--accent-soft)',
+                  border: '1px solid color-mix(in srgb, var(--accent) 34%, var(--line))',
                 marginBottom: '14px',
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -278,7 +293,7 @@ export const StudyDashboard: React.FC = () => {
                         style={{
                           fontSize: '13px',
                           fontWeight: 600,
-                          color: m.completed ? '#b9aaa0' : '#fff',
+                          color: m.completed ? 'var(--text-dim)' : 'var(--text)',
                           textDecoration: m.completed ? 'line-through' : 'none'
                         }}
                       >
@@ -296,8 +311,8 @@ export const StudyDashboard: React.FC = () => {
                       style={{
                         padding: '4px 8px',
                         borderRadius: '4px',
-                        background: 'rgba(0, 240, 255, 0.08)',
-                        border: '1px solid rgba(0, 240, 255, 0.25)',
+                        background: 'var(--accent-soft)',
+                        border: '1px solid color-mix(in srgb, var(--accent) 34%, var(--line))',
                         color: 'var(--primary-cyan)',
                         fontSize: '10px',
                         fontWeight: 700,
@@ -378,7 +393,7 @@ export const StudyDashboard: React.FC = () => {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#fff' }}>{q.subject}</div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)' }}>{q.subject}</div>
                   <div style={{ fontSize: '10px', color: 'var(--text-dim)' }}>
                     Weak in: {q.weakTopics.join(', ') || 'None'}
                   </div>

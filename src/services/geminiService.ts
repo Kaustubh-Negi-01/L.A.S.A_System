@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   VisualScanResult,
+  VisualFollowUpResponse,
   StudyPlan,
   StudyPlanRequest,
   QuizQuestion,
@@ -16,6 +17,7 @@ import {
 } from '../types';
 import {
   generateMockVisualInsights,
+  generateMockVisualFollowUp,
   generateMockStudyPlan,
   generateMockQuiz,
   evaluateMockQuiz,
@@ -229,7 +231,10 @@ Return strictly a valid JSON object matching this TypeScript interface without m
       "actionSuggested": string[]
     }
   ],
-  "actionItems": string[] // list of 2-4 immediate to-do tasks
+      "actionItems": string[],
+      "keyFacts": string[],
+      "recommendedActions": string[],
+      "followUpSuggestions": string[]
 }`;
 
     const imagePart = {
@@ -259,6 +264,9 @@ Return strictly a valid JSON object matching this TypeScript interface without m
         actionSuggested: e.actionSuggested || ['Add to Calendar']
       })),
       actionItems: parsed.actionItems || ['Review document'],
+      keyFacts: Array.isArray(parsed.keyFacts) ? parsed.keyFacts.slice(0, 4) : [],
+      recommendedActions: Array.isArray(parsed.recommendedActions) ? parsed.recommendedActions.slice(0, 5) : [],
+      followUpSuggestions: Array.isArray(parsed.followUpSuggestions) ? parsed.followUpSuggestions.slice(0, 4) : [],
       scannedAt: new Date().toISOString()
     };
   } catch (error) {
@@ -281,7 +289,10 @@ Interpret the following OCR text from a notice, poster, timetable, or syllabus a
   "summary": string,
   "extractedDates": string[],
   "extractedEvents": [{ "id": string, "title": string, "date": string, "time": string, "location": string, "category": "exam" | "assignment" | "workshop" | "competition" | "general", "description": string, "actionSuggested": string[] }],
-  "actionItems": string[]
+  "actionItems": string[],
+  "keyFacts": string[],
+  "recommendedActions": string[],
+  "followUpSuggestions": string[]
 }
 
 OCR text:
@@ -303,12 +314,50 @@ ${sourceText}`;
         actionSuggested: Array.isArray(event.actionSuggested) ? event.actionSuggested : ['Add to Calendar']
       })),
       actionItems: Array.isArray(parsed.actionItems) ? parsed.actionItems : ['Review document'],
+      keyFacts: Array.isArray(parsed.keyFacts) ? parsed.keyFacts.slice(0, 4) : [],
+      recommendedActions: Array.isArray(parsed.recommendedActions) ? parsed.recommendedActions.slice(0, 5) : [],
+      followUpSuggestions: Array.isArray(parsed.followUpSuggestions) ? parsed.followUpSuggestions.slice(0, 4) : [],
       rawText: sourceText,
       scannedAt: new Date().toISOString()
     };
   } catch (error) {
     console.warn('Live preset extraction failed, using mock fallback:', error);
     return generateMockVisualInsights(sourceText);
+  }
+}
+
+export async function answerVisualScanFollowUp(
+  question: string,
+  scan: VisualScanResult,
+  config?: AiConfig
+): Promise<VisualFollowUpResponse> {
+  const activeConfig = config ?? getAiConfig();
+  if (!activeConfig.apiKey) return generateMockVisualFollowUp(question, scan);
+
+  try {
+    const prompt = `You are L.A.S.A. Understand & Act, answering a follow-up about one scanned document. Stay grounded only in the scan context. Be concise but useful. If the user asks for an action, explain the first safe step and name the relevant destination.
+Return only valid JSON:
+{
+  "answer": string,
+  "nextSteps": string[],
+  "suggestedDestination": "tasks" | "study" | "calendar" | "none"
+}
+
+USER QUESTION:
+${question}
+
+SCAN CONTEXT:
+${JSON.stringify({ title: scan.title, summary: scan.summary, keyFacts: scan.keyFacts, dates: scan.extractedDates, events: scan.extractedEvents, actionItems: scan.actionItems, recommendedActions: scan.recommendedActions })}`;
+    const parsed = JSON.parse(cleanJsonResponse(await generateText(activeConfig, prompt)));
+    const destination = ['tasks', 'study', 'calendar', 'none'].includes(parsed.suggestedDestination) ? parsed.suggestedDestination : 'none';
+    return {
+      answer: typeof parsed.answer === 'string' && parsed.answer.trim() ? parsed.answer.trim() : 'I can help you turn this scan into a managed next step.',
+      nextSteps: Array.isArray(parsed.nextSteps) ? parsed.nextSteps.filter((step: unknown): step is string => typeof step === 'string').slice(0, 4) : [],
+      suggestedDestination: destination
+    };
+  } catch (error) {
+    console.warn('Visual follow-up failed, switching to Smart Mock fallback:', error);
+    return generateMockVisualFollowUp(question, scan);
   }
 }
 
@@ -356,21 +405,27 @@ Return strictly a valid JSON object matching this structure:
     const responseText = cleanJsonResponse(await generateText(activeConfig, prompt));
     const parsed = JSON.parse(responseText);
 
+    const fallbackPlan = generateMockStudyPlan(req.subject, req.examDate, req.dailyMinutes, req.goal, req.knownWeaknesses);
+    const parsedMilestones = Array.isArray(parsed.milestones) ? parsed.milestones : [];
+    const normalizedMilestones = parsedMilestones.length > 0
+      ? parsedMilestones.map((m: any, idx: number) => ({
+          day: m.day || idx + 1,
+          topic: m.topic || `Day ${idx + 1} Review`,
+          focusArea: m.focusArea || `Explain the concept, make flashcards, solve a worked example, then complete a short diagnostic quiz for ${m.topic || 'this topic'}.`,
+          estimatedMinutes: m.estimatedMinutes || req.dailyMinutes,
+          completed: Boolean(m.completed)
+        }))
+      : fallbackPlan.milestones;
+
     return {
       id: `plan-${Date.now()}`,
       subject: parsed.subject || req.subject,
       examDate: parsed.examDate || req.examDate,
-      totalDaysAvailable: parsed.totalDaysAvailable || 3,
+      totalDaysAvailable: parsed.totalDaysAvailable || normalizedMilestones.length || 3,
       dailyStudyMinutes: parsed.dailyStudyMinutes || req.dailyMinutes,
       targetGradeOrGoal: parsed.targetGradeOrGoal || req.goal,
-      weakTopicsIdentified: parsed.weakTopicsIdentified || req.knownWeaknesses || [],
-      milestones: (parsed.milestones || []).map((m: any, idx: number) => ({
-        day: m.day || idx + 1,
-        topic: m.topic || `Day ${idx + 1} Review`,
-        focusArea: m.focusArea || `Explain the concept, make flashcards, solve a worked example, then complete a short diagnostic quiz for ${m.topic || 'this topic'}.`,
-        estimatedMinutes: m.estimatedMinutes || req.dailyMinutes,
-        completed: false
-      })),
+      weakTopicsIdentified: Array.isArray(parsed.weakTopicsIdentified) ? parsed.weakTopicsIdentified : (req.knownWeaknesses || []),
+      milestones: normalizedMilestones,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
