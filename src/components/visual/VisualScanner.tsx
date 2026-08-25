@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Camera, FileText, Sparkles, Loader2, CheckCircle, Video, XCircle, RefreshCw } from 'lucide-react';
 import { useSharedContext } from '../../context/SharedContext';
 import { extractVisualInsights, extractVisualInsightsFromText } from '../../services/geminiService';
-import { sampleImagePresets, generateMockVisualInsights } from '../../services/mockData';
+import { sampleImagePresets, generateMockVisualInsights, generateMockImageSimulation } from '../../services/mockData';
 import { VisualScanResult } from '../../types';
 
 interface VisualScannerProps {
@@ -137,9 +137,9 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
       if (activePreset) {
         const presetObj = sampleImagePresets.find(p => p.id === activePreset);
         const liveConfig = getAiConfig();
-        scanResult = liveConfig.apiKey && presetObj?.imagePromptText
+        scanResult = liveConfig.mode !== 'simulation' && (liveConfig.apiKey || liveConfig.secondaryApiKey) && presetObj?.imagePromptText
           ? await extractVisualInsightsFromText(presetObj.imagePromptText, liveConfig)
-          : generateMockVisualInsights(presetObj?.imagePromptText);
+          : generateMockVisualInsights(presetObj?.imagePromptText, 'simulation');
       } else if (selectedImage) {
         scanResult = await extractVisualInsights(selectedImage, mimeType, getAiConfig());
       } else {
@@ -150,7 +150,9 @@ export const VisualScanner: React.FC<VisualScannerProps> = ({ onScanComplete }) 
       onScanComplete(scanResult);
     } catch (err) {
       console.error('Visual scanner error:', err);
-      const fallback = generateMockVisualInsights(undefined, 'fallback');
+      const fallback = selectedImage
+        ? generateMockImageSimulation(selectedImage)
+        : generateMockVisualInsights(undefined, 'fallback');
       addScanResult(fallback);
       onScanComplete(fallback);
     } finally {

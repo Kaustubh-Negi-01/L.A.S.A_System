@@ -207,10 +207,28 @@ export function generateMockVisualFollowUp(question: string, scan: VisualScanRes
   };
 }
 
-export function generateMockVisualInsights(hintText?: string, source: 'simulation' | 'fallback' = 'simulation'): VisualScanResult {
+export function generateMockImageSimulation(imageUrl?: string): VisualScanResult {
+  return {
+    id: `scan-${Date.now()}`,
+    imageUrl,
+    title: 'Image received — local simulation',
+    summary: 'The local core AI received this image, but Demo Simulation does not claim to read pixels. Connect a vision-capable provider for real extraction.',
+    extractedDates: [],
+    extractedEvents: [],
+    actionItems: ['Review the uploaded image manually', 'Connect a vision-capable provider for extraction', 'Scan again after connecting the provider'],
+    keyFacts: ['Image captured successfully.', 'No dates, events, or tasks are claimed without live vision processing.'],
+    recommendedActions: ['Choose a vision-capable model in Settings', 'Try a clearer image if live extraction fails'],
+    followUpSuggestions: ['What should I check in this image?', 'How do I connect a vision model?'],
+    source: 'simulation',
+    scannedAt: new Date().toISOString()
+  };
+}
+
+export function generateMockVisualInsights(hintText?: string, source: 'simulation' | 'fallback' = 'simulation', imageUrl?: string): VisualScanResult {
   if (source === 'fallback') {
     return {
       id: `scan-${Date.now()}`,
+      imageUrl,
       title: 'Image needs a live vision model',
       summary: 'L.A.S.A. could not reliably extract this image. Review it manually or choose a multimodal model in Settings, then scan again.',
       extractedDates: [],

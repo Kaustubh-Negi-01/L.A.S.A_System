@@ -23,6 +23,7 @@ import {
 } from './aiDefaults';
 import {
   generateMockVisualInsights,
+  generateMockImageSimulation,
   generateMockVisualFollowUp,
   generateMockStudyPlan,
   generateMockQuiz,
@@ -262,7 +263,7 @@ export async function extractVisualInsights(
   
   if (!hasLiveCredentials(activeConfig)) {
     console.info('Using review-required fallback for Visual Insights (No API Key)');
-    return generateMockVisualInsights(undefined, 'fallback');
+    return generateMockImageSimulation(imageBase64);
   }
 
   try {
@@ -305,7 +306,7 @@ Use empty arrays when nothing is visible. Do not guess missing dates, places, or
     };
   } catch (error) {
     console.warn('Visual scan failed; showing a review-required fallback:', error);
-    return generateMockVisualInsights(undefined, 'fallback');
+    return generateMockVisualInsights(undefined, 'fallback', imageBase64);
   }
 }
 

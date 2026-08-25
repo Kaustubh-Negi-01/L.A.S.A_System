@@ -259,6 +259,17 @@ export const ExtractedInsights: React.FC<ExtractedInsightsProps> = ({
           This image was not confidently read. No events were invented; choose a vision-capable model or try a clearer image.
         </div>
       )}
+      {scan.source === 'simulation' && scan.imageUrl && (
+        <div className="scan-simulation-notice" role="status">
+          Local simulation received the image and preserved it for review. Pixel-level extraction is intentionally not claimed without a live vision model.
+        </div>
+      )}
+      {scan.imageUrl && (
+        <div className="scan-image-preview" style={{ marginBottom: '14px' }}>
+          <img src={scan.imageUrl} alt="Scanned document preview" />
+          <span>{scan.source === 'live' ? 'Vision input' : 'Image received'}</span>
+        </div>
+      )}
 
       {/* Title & Summary */}
       <div style={{ marginBottom: '14px' }}>

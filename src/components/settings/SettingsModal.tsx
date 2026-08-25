@@ -93,14 +93,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const secondaryCredential = Boolean(inputSecondaryKey.trim());
   const providerLabel = providerLabels[inputProvider];
   const statusTitle = aiMode === 'simulation'
-    ? activeCredential ? 'Demo Simulation Engine active' : 'Demo Simulation · primary unavailable'
+    ? 'Local Core AI Simulation active'
     : activeCredential
       ? `${providerLabel} · ${inputModel || 'model not selected'}`
       : secondaryCredential
         ? 'Primary unavailable · secondary fallback active'
         : 'Primary provider unavailable — add an API key';
   const statusCopy = aiMode === 'simulation'
-    ? activeCredential ? 'Fast, private, zero-key mode for offline evaluation.' : 'Primary API is not configured. Enter your API key or use Demo Simulation while waiting for the original release build.'
+    ? 'Core scan, study, quiz, explanation, task, and recommendation flows work without an API key. Connect a provider only when you want live model output.'
     : activeCredential
       ? 'Primary provider is configured for scanner, study, quiz, and productivity actions; the secondary key is used only if it fails.'
       : secondaryCredential
